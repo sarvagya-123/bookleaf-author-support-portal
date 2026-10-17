@@ -1,0 +1,413 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&display=swap');
+
+/* ============================================================
+   DESIGN TOKENS & BASE STYLES
+   ============================================================ */
+:root {
+  --ink: #13243b;
+  --ink-2: #1d3554;
+  --gold: #bd9258;
+  --gold-dark: #956c36;
+  --paper: #f7f5f0;
+  --paper-2: #efebe3;
+  --white: #ffffff;
+  --muted: #718096;
+  --line: rgba(19, 36, 59, 0.1);
+  --success: #17765c;
+  --danger: #ad3f42;
+
+  --shadow-sm: 0 4px 14px rgba(19, 36, 59, 0.045);
+  --shadow-md: 0 18px 45px rgba(19, 36, 59, 0.09);
+  --shadow-lg: 0 28px 70px rgba(19, 36, 59, 0.14);
+
+  --r-sm: 10px;
+  --r-md: 18px;
+  --r-lg: 26px;
+
+  --gutter: clamp(1.25rem, 3vw, 3rem);
+  --gap: 1.25rem;
+  --content-max: 1320px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 92% 3%, rgba(189, 146, 88, 0.09), transparent 26rem),
+    var(--paper);
+  font-family: 'DM Sans', Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
+  line-height: 1.65;
+  font-feature-settings: "cv11", "ss01";
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--gold);
+  color: #ffffff;
+}
+
+h1,
+h2,
+h3,
+.serif {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-weight: 500;
+  letter-spacing: -0.035em;
+  line-height: 1.15;
+}
+
+p {
+  overflow-wrap: anywhere;
+}
+
+a {
+  color: var(--gold-dark);
+  text-underline-offset: 3px;
+  text-decoration: none;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[role="button"]:focus-visible {
+  outline: 3px solid rgba(189, 146, 88, 0.38);
+  outline-offset: 3px;
+}
+
+button:disabled {
+  opacity: 0.58;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -420px 0;
+  }
+  100% {
+    background-position: 420px 0;
+  }
+}
+
+/* ============================================================
+   LOADING STATE
+   ============================================================ */
+.loading-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  color: var(--ink);
+  font-size: 1rem;
+  background: var(--paper);
+}
+
+/* ============================================================
+   LOGIN & AUTH
+   ============================================================ */
+.auth-login {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 750px 520px at 50% 0%, rgba(189, 146, 88, 0.13), transparent 72%),
+    linear-gradient(135deg, #faf7f1, #f0ece4);
+}
+
+.auth-login::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(19, 36, 59, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(19, 36, 59, 0.025) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse at center, black 15%, transparent 78%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 15%, transparent 78%);
+}
+
+.auth-card {
+  position: relative;
+  width: 100%;
+  max-width: 475px;
+  padding: 3.4rem 3rem 2.6rem;
+  border: 1px solid rgba(19, 36, 59, 0.1);
+  border-radius: 26px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: var(--shadow-lg);
+  z-index: 1;
+  animation: rise-in 0.55s ease both;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.auth-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 15%;
+  right: 15%;
+  height: 4px;
+  border-radius: 0 0 10px 10px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+
+.auth-card .brand {
+  display: block;
+  margin: 0.25rem 0 1.25rem;
+  text-align: center;
+  color: var(--gold-dark);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.27em;
+  text-transform: uppercase;
+}
+
+.auth-card h1 {
+  margin: 0 0 0.75rem;
+  text-align: center;
+  font-size: 2.65rem;
+  color: var(--ink);
+}
+
+.auth-card .subtitle {
+  margin: 0 0 2rem;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.91rem;
+  line-height: 1.75;
+}
+
+.auth-card form {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.auth-card label {
+  display: block;
+  margin: 1.25rem 0 0.55rem;
+  color: #46566b;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.auth-card input,
+.auth-card select {
+  width: 100%;
+  padding: 0.95rem 1rem;
+  border: 1px solid #e0e4e9;
+  border-radius: 12px;
+  background: #fbfaf8;
+  color: var(--ink);
+  font-size: 0.94rem;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.auth-card input::placeholder {
+  color: #a8b0bc;
+}
+
+.auth-card input:focus,
+.auth-card select:focus {
+  outline: none;
+  border-color: var(--gold);
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(189, 146, 88, 0.12);
+}
+
+.auth-submit-author,
+.auth-submit-admin {
+  width: 100%;
+  margin-top: 1.8rem;
+  padding: 1rem 1.2rem;
+  border: 0;
+  border-radius: 12px;
+  font-size: 0.77rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.auth-submit-author {
+  color: #ffffff;
+  background: linear-gradient(135deg, #1b3554, #0d1d33);
+  box-shadow: 0 12px 25px rgba(19, 36, 59, 0.2);
+}
+
+.auth-submit-admin {
+  color: #ffffff;
+  background: linear-gradient(135deg, #c59a60, #986d37);
+  box-shadow: 0 12px 25px rgba(149, 108, 54, 0.23);
+}
+
+.auth-submit-author:hover:not(:disabled),
+.auth-submit-admin:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 17px 30px rgba(19, 36, 59, 0.2);
+}
+
+.auth-card .error {
+  margin-top: 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid #f2c6c4;
+  border-radius: 11px;
+  background: #fff0ee;
+  color: var(--danger);
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+.auth-card .footer {
+  margin: 1.7rem 0 0;
+  text-align: center;
+  color: #929baa;
+  font-size: 0.72rem;
+}
+
+/* ============================================================
+   APP SHELL - DASHBOARD LAYOUT
+   ============================================================ */
+.dashboard {
+  display: flex;
+  min-height: 100vh;
+  overflow-x: clip;
+  background: var(--paper);
+}
+
+.main-content {
+  flex: 1;
+  min-width: 0;
+  max-width: 100%;
+  padding: var(--gutter);
+  overflow-x: hidden;
+}
+
+.main-shell {
+  width: 100%;
+  max-width: var(--content-max);
+  margin: 0 auto;
+}
+
+.overview-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+/* ============================================================
+   RESPONSIVE LAYOUT
+   ============================================================ */
+@media (max-width: 900px) {
+  .dashboard {
+    flex-direction: column;
+  }
+
+  .main-content {
+    padding-top: 1.25rem;
+  }
+}
+
+@media (max-width: 640px) {
+  :root {
+    --gutter: clamp(1rem, 3vw, 1.5rem);
+    --gap: 1rem;
+  }
+
+  .main-content {
+    padding: 1rem;
+  }
+
+  .auth-card {
+    padding: 2.5rem 1.75rem 2rem;
+  }
+
+  .auth-card h1 {
+    font-size: 2rem;
+  }
+}
+
+/* ============================================================
+   UTILITY CLASSES
+   ============================================================ */
+.error {
+  color: var(--danger);
+}
+
+.success {
+  color: var(--success);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+/* Print Styles */
+@media print {
+  body {
+    background: white;
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
