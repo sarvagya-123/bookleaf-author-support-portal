@@ -316,6 +316,7 @@ const MyTickets = () => {
                       <span>
                         {ticket.bookTitle ||
                           ticket.book_title ||
+                          ticket.category ||
                           'General inquiry'}
                       </span>
                     </span>
@@ -393,6 +394,7 @@ const MyTickets = () => {
                   <span>
                     {selectedTicket.bookTitle ||
                       selectedTicket.book_title ||
+                      selectedTicket.category ||
                       'General inquiry'}
                   </span>
                 </div>
