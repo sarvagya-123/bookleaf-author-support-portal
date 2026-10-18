@@ -37,7 +37,8 @@
   returns empty content or is unavailable.
 - Temporary QA author/admin accounts, two synthetic hosted tickets, their
   messages, and private notes were removed. Supabase aggregate counts returned
-  to baseline: 10 authors, 18 books, 3 users, 2 tickets, 5 messages, 1 note.
+  to baseline at that point: 10 authors, 18 books, 3 users, 2 tickets,
+  5 messages, 1 note.
 
 ## Dataset comparison
 
@@ -47,7 +48,9 @@ The attached assignment JSON was compared with the checked-in
 against Supabase to upsert these exact sample values while preserving linked
 user IDs. A read-only, field-by-field verification then reported zero
 mismatches across all author and book fields. Aggregate counts remain 10
-authors, 18 books, 3 users, 2 tickets, 5 messages, and 1 private note.
+authors and 18 books. The subsequent demo setup added two users and one
+synthetic ticket, its opening message, and a private demo note. Current counts
+are 10 authors, 18 books, 5 users, 3 tickets, 6 messages, and 2 notes.
 
 Running `server/seed.js` again will overwrite later changes to the sample
 author and book records with the assignment values.
@@ -62,6 +65,11 @@ author and book records with the assignment values.
 - Read-only author and admin demo logins are published in the README. The
   author account links to seeded author `AUTH002`; the admin queue is restricted
   to that author's synthetic demo ticket. Demo accounts cannot perform writes.
+- Hosted demo-account checks passed: author login showed two seeded books and
+  one ticket; admin login showed only the demo ticket and its private note.
+  Demo write attempts returned HTTP 403, and an admin request for another
+  author's ticket returned HTTP 404. Admin AI draft and classification calls
+  succeeded.
 - `OPENROUTER_API_KEY` is present in the API project's Vercel Production
   environment. After deployment of the 1,000-token draft cap, a live hosted
   check returned an AI-sourced draft and the expected classification. An

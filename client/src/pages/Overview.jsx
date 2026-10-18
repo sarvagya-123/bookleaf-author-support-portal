@@ -488,10 +488,11 @@ const Overview = ({ onNavigate }) => {
           <div className="tickets-list">
             {tickets.map((ticket, index) => {
               const status = getTicketStatus(ticket);
-              const bookTitle =
+              const ticketContext =
                 ticket.bookTitle ||
                 ticket.book_title ||
                 ticket.book_name ||
+                ticket.category ||
                 'General inquiry';
 
               const createdAt =
@@ -514,7 +515,7 @@ const Overview = ({ onNavigate }) => {
                     <strong>{ticket.subject || 'Support request'}</strong>
                     <p className="ticket-meta-line">
                       {formatDate(createdAt)}{' '}
-                      <span aria-hidden="true">·</span> {bookTitle}
+                      <span aria-hidden="true">·</span> {ticketContext}
                     </p>
                     {description && (
                       <p className="ticket-desc">{description}</p>

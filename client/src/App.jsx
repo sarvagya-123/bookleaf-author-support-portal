@@ -33,6 +33,11 @@ const PAGE_TITLES = {
   'contact-support': 'Contact Support',
 };
 
+const DEMO_ACCOUNT_EMAILS = new Set([
+  'demo.admin@bookleaf-demo.com',
+  'rohit.kapoor@email.com',
+]);
+
 function clearStoredSession() {
   [
     'bookleaf_token',
@@ -63,6 +68,7 @@ function App() {
   const [currentPage, setCurrentPage] = useState('overview');
   const [role, setRole] = useState(initialSession?.savedRole || null);
   const [authRole, setAuthRole] = useState(null);
+  const isReadOnlyDemo = DEMO_ACCOUNT_EMAILS.has(userEmail.toLowerCase());
 
   async function handleLogin(email, password, loginRole) {
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
@@ -190,6 +196,12 @@ function App() {
   if (role === 'admin') {
     return (
       <div className="admin-app">
+        {isReadOnlyDemo && (
+          <div className="demo-readonly-banner" role="status">
+            Public demo account: read-only. The queue is limited to sample
+            data; AI drafts can be generated but not sent or saved.
+          </div>
+        )}
         <AdminDashboard logout={handleLogout} />
       </div>
     );
@@ -228,6 +240,13 @@ function App() {
             userEmail={userEmail}
             onRefresh={handleRefresh}
           />
+
+          {isReadOnlyDemo && (
+            <div className="demo-readonly-banner" role="status">
+              Public demo account: read-only. Explore the sample books,
+              royalties, and support ticket; account changes are disabled.
+            </div>
+          )}
 
           <div className="overview-stack">{renderAuthorPage()}</div>
         </div>

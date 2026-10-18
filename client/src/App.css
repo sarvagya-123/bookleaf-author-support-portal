@@ -379,6 +379,16 @@ button:disabled {
   margin: 0 auto;
 }
 
+.demo-readonly-banner {
+  margin: 0 0 var(--gap);
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(149, 108, 54, 0.28);
+  border-radius: var(--r-sm);
+  background: rgba(189, 146, 88, 0.1);
+  color: var(--ink-2);
+  font-weight: 600;
+}
+
 .overview-stack {
   display: flex;
   flex-direction: column;
