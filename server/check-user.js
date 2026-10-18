@@ -3,10 +3,16 @@ const db = require("./db");
 const bcrypt = require("bcryptjs");
 
 async function main() {
-  const email = "admin@bookleaf.local";
-  const password = "AdminPortal123!";
+  const email = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+  const password = process.env.ADMIN_PASSWORD;
 
   try {
+    if (!email || !password || password.length < 8) {
+      throw new Error(
+        "Set ADMIN_EMAIL and an ADMIN_PASSWORD of at least 8 characters before provisioning an admin."
+      );
+    }
+
     const hash = await bcrypt.hash(password, 10);
 
     const existing = await db.query(
@@ -20,7 +26,7 @@ async function main() {
         "UPDATE public.users SET password_hash = $1, role = 'admin', is_active = true WHERE email = $2",
         [hash, email]
       );
-      console.log("✅ Admin password successfully reset!");
+      console.log("Admin password successfully updated.");
     } else {
       // Create admin if missing
       await db.query(
@@ -28,16 +34,12 @@ async function main() {
          VALUES ($1, $2, 'admin', true)`,
         [email, hash]
       );
-      console.log("✅ Admin account successfully created!");
+      console.log("Admin account successfully created.");
     }
-    
-    console.log("-----------------------------------------");
-    console.log("Email:    admin@bookleaf.local");
-    console.log("Password: AdminPortal123!");
-    console.log("-----------------------------------------");
 
   } catch (error) {
-    console.error("❌ Error:", error.message);
+    console.error("Admin provisioning error:", error.message);
+    process.exitCode = 1;
   } finally {
     await db.end();
   }

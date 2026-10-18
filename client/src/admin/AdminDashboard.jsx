@@ -1,8 +1,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import "./AdminDashboard.css";
-
-const API = "http://localhost:5000/api";
+import { API_BASE_URL } from "../api";
+import { findSimilarTickets } from "./similarTickets";
 
 const CATEGORIES = [
   "Royalty & Payments",
@@ -15,6 +15,33 @@ const CATEGORIES = [
 
 const PRIORITIES = ["Critical", "High", "Medium", "Low"];
 const STATUSES = ["Open", "In Progress", "Resolved", "Closed"];
+const AGING_THRESHOLD_MS = 48 * 60 * 60 * 1000;
+
+function isUnresolved(ticket) {
+  return !["resolved", "closed"].includes(
+    String(ticket.status || "").toLowerCase()
+  );
+}
+
+function isAging(ticket, now = Date.now()) {
+  const createdAt = new Date(ticket.created_at || "").getTime();
+  return isUnresolved(ticket) &&
+    Number.isFinite(createdAt) &&
+    now - createdAt >= AGING_THRESHOLD_MS;
+}
+
+function formatAge(value) {
+  const createdAt = new Date(value || "").getTime();
+  if (!Number.isFinite(createdAt)) return "Age unavailable";
+
+  const hours = Math.max(0, Math.floor((Date.now() - createdAt) / 3600000));
+  if (hours < 1) return "Less than 1h old";
+  if (hours < 24) return `${hours}h old`;
+
+  const days = Math.floor(hours / 24);
+  const remainingHours = hours % 24;
+  return remainingHours ? `${days}d ${remainingHours}h old` : `${days}d old`;
+}
 
 function getToken() {
   return localStorage.getItem("bookleaf_token") ||
@@ -23,7 +50,7 @@ function getToken() {
 }
 
 async function apiRequest(path, options = {}) {
-  const response = await fetch(`${API}${path}`, {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",
@@ -80,6 +107,7 @@ export default function AdminDashboard({ logout = () => {} }) {
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [dateFilter, setDateFilter] = useState("");
   const [sortBy, setSortBy] = useState("urgent");
+  const [agingOnly, setAgingOnly] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -94,6 +122,20 @@ export default function AdminDashboard({ logout = () => {} }) {
   const selectedTicket = tickets.find(
     (ticket) => String(getTicketId(ticket)) === String(selectedId)
   ) || null;
+  const similarTickets = useMemo(
+    () => findSimilarTickets(selectedTicket, tickets),
+    [selectedTicket, tickets]
+  );
+
+  function openTicket(ticket) {
+    const ticketId = getTicketId(ticket);
+    setSelectedId(ticketId);
+    setReply("");
+    setNote("");
+    setNotes([]);
+    setClassification(null);
+    loadNotes(ticketId);
+  }
 
   const loadTickets = useCallback(async (showLoading = true) => {
     if (showLoading) setLoading(true);
@@ -129,28 +171,25 @@ export default function AdminDashboard({ logout = () => {} }) {
       setNotes(normalizeList(data, "notes"));
     } catch {
       setNotes([]);
+      setError("Could not load internal notes for this ticket.");
     }
   }, []);
 
   useEffect(() => {
-    loadTickets();
+    const initialLoad = window.setTimeout(() => {
+      loadTickets();
+    }, 0);
 
     // Near-real-time refresh without requiring a manual browser reload.
     const timer = window.setInterval(() => {
       loadTickets(false);
     }, 15000);
 
-    return () => window.clearInterval(timer);
+    return () => {
+      window.clearTimeout(initialLoad);
+      window.clearInterval(timer);
+    };
   }, [loadTickets]);
-
-  useEffect(() => {
-    setReply("");
-    setNote("");
-    setClassification(null);
-
-    if (selectedId) loadNotes(selectedId);
-    else setNotes([]);
-  }, [selectedId, loadNotes]);
 
   const visibleTickets = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -182,15 +221,13 @@ export default function AdminDashboard({ logout = () => {} }) {
         !dateFilter ||
         (created && !Number.isNaN(created.getTime()) &&
           created.toISOString().slice(0, 10) === dateFilter);
+      const matchesAge = !agingOnly || isAging(ticket);
 
       return matchesSearch && matchesStatus && matchesPriority &&
-        matchesCategory && matchesDate;
+        matchesCategory && matchesDate && matchesAge;
     });
 
     const priorityRank = { critical: 0, high: 1, medium: 2, low: 3 };
-    const unresolved = (ticket) =>
-      !["resolved", "closed"].includes(String(ticket.status || "").toLowerCase());
-
     return filtered.sort((a, b) => {
       if (sortBy === "oldest") {
         return new Date(a.created_at || 0) - new Date(b.created_at || 0);
@@ -203,12 +240,12 @@ export default function AdminDashboard({ logout = () => {} }) {
       const aPriority = priorityRank[String(a.priority || "medium").toLowerCase()] ?? 2;
       const bPriority = priorityRank[String(b.priority || "medium").toLowerCase()] ?? 2;
 
-      if (unresolved(a) !== unresolved(b)) return unresolved(a) ? -1 : 1;
+      if (isUnresolved(a) !== isUnresolved(b)) return isUnresolved(a) ? -1 : 1;
       if (aPriority !== bPriority) return aPriority - bPriority;
 
       return new Date(a.created_at || 0) - new Date(b.created_at || 0);
     });
-  }, [tickets, search, statusFilter, priorityFilter, categoryFilter, dateFilter, sortBy]);
+  }, [tickets, search, statusFilter, priorityFilter, categoryFilter, dateFilter, sortBy, agingOnly]);
 
   const stats = useMemo(() => ({
     total: tickets.length,
@@ -216,8 +253,9 @@ export default function AdminDashboard({ logout = () => {} }) {
     progress: tickets.filter((t) => String(t.status).toLowerCase() === "in progress").length,
     urgent: tickets.filter((t) =>
       ["critical", "high"].includes(String(t.priority || "").toLowerCase()) &&
-      !["resolved", "closed"].includes(String(t.status || "").toLowerCase())
+      isUnresolved(t)
     ).length,
+    aging: tickets.filter((ticket) => isAging(ticket)).length,
     resolved: tickets.filter((t) =>
       ["resolved", "closed"].includes(String(t.status || "").toLowerCase())
     ).length,
@@ -256,9 +294,15 @@ export default function AdminDashboard({ logout = () => {} }) {
       const data = await apiRequest("/ai/classify", {
         method: "POST",
         body: JSON.stringify({
-          subject: selectedTicket.subject,
-          description: selectedTicket.description,
-          ticket_id: getTicketId(selectedTicket),
+          ticket: {
+            subject: selectedTicket.subject,
+            description: selectedTicket.description,
+            ticket_id: getTicketId(selectedTicket),
+            category: selectedTicket.category,
+            priority: selectedTicket.priority,
+            author_name: selectedTicket.author_name,
+            book_title: selectedTicket.book_title,
+          },
         }),
       });
 
@@ -312,11 +356,15 @@ export default function AdminDashboard({ logout = () => {} }) {
       const data = await apiRequest("/ai/draft-reply", {
         method: "POST",
         body: JSON.stringify({
-          ticket_id: getTicketId(selectedTicket),
-          subject: selectedTicket.subject,
-          description: selectedTicket.description,
-          category: selectedTicket.category,
-          priority: selectedTicket.priority,
+          ticket: {
+            ticket_id: getTicketId(selectedTicket),
+            subject: selectedTicket.subject,
+            description: selectedTicket.description,
+            category: selectedTicket.category,
+            priority: selectedTicket.priority,
+            author_name: selectedTicket.author_name,
+            book_title: selectedTicket.book_title,
+          },
         }),
       });
 
@@ -418,6 +466,7 @@ export default function AdminDashboard({ logout = () => {} }) {
     setCategoryFilter("All");
     setDateFilter("");
     setSortBy("urgent");
+    setAgingOnly(false);
   }
 
   return (
@@ -467,6 +516,17 @@ export default function AdminDashboard({ logout = () => {} }) {
           <Stat label="Open" value={stats.open} icon="◷" />
           <Stat label="In progress" value={stats.progress} icon="↻" />
           <Stat label="Urgent · Critical/High" value={stats.urgent} icon="!" urgent />
+          <Stat
+            label="Unresolved over 48h"
+            value={stats.aging}
+            icon="⌛"
+            urgent={stats.aging > 0}
+            action={() => {
+              setAgingOnly((current) => !current);
+              setStatusFilter("All");
+            }}
+            active={agingOnly}
+          />
           <Stat label="Resolved / Closed" value={stats.resolved} icon="✓" />
         </section>
 
@@ -475,7 +535,10 @@ export default function AdminDashboard({ logout = () => {} }) {
             <div className="admin-panel-heading">
               <div>
                 <h2>Ticket queue</h2>
-                <p>{visibleTickets.length} matching tickets</p>
+                <p>
+                  {visibleTickets.length} matching tickets
+                  {agingOnly ? " · unresolved over 48 hours" : ""}
+                </p>
               </div>
               <span className="admin-queue-count">{visibleTickets.length}</span>
             </div>
@@ -555,7 +618,7 @@ export default function AdminDashboard({ logout = () => {} }) {
                     type="button"
                     key={id}
                     className={`admin-ticket-card ${isSelected ? "is-selected" : ""}`}
-                    onClick={() => setSelectedId(id)}
+                    onClick={() => openTicket(ticket)}
                   >
                     <div className="admin-ticket-card-top">
                       <span className="admin-ticket-number">
@@ -583,6 +646,14 @@ export default function AdminDashboard({ logout = () => {} }) {
                     <div className="admin-ticket-card-meta">
                       <span>{ticket.category || "General Inquiry"}</span>
                       <span>{formatDate(ticket.created_at)}</span>
+                    </div>
+                    <div className="admin-ticket-card-age">
+                      <span className={isAging(ticket) ? "is-aging" : ""}>
+                        {formatAge(ticket.created_at)}
+                      </span>
+                      <span>
+                        {ticket.assigned_to ? "Assigned" : "Unassigned"}
+                      </span>
                     </div>
                   </button>
                 );
@@ -633,7 +704,46 @@ export default function AdminDashboard({ logout = () => {} }) {
                       <span><strong>Category</strong>{selectedTicket.category || "General Inquiry"}</span>
                       <span><strong>Priority</strong>{selectedTicket.priority || "Medium"}</span>
                       <span><strong>Status</strong>{selectedTicket.status || "Open"}</span>
+                      <span><strong>Age</strong>{formatAge(selectedTicket.created_at)}</span>
+                      <span><strong>Owner</strong>{selectedTicket.assigned_to ? "Assigned" : "Unassigned"}</span>
                     </div>
+                  </section>
+
+                  <section className="admin-section-card">
+                    <SectionHeading
+                      title="Related tickets"
+                      subtitle="Heuristic matches based on shared wording and category; review before treating these as duplicates."
+                    />
+                    {similarTickets.length === 0 ? (
+                      <p className="admin-related-empty">
+                        No strongly related tickets found in the current queue.
+                      </p>
+                    ) : (
+                      <div className="admin-related-list">
+                        {similarTickets.map(({ ticket, score, sharedTerms, sameCategory }) => (
+                          <button
+                            type="button"
+                            key={getTicketId(ticket)}
+                            className="admin-related-ticket"
+                            onClick={() => openTicket(ticket)}
+                          >
+                            <span className="admin-related-ticket-heading">
+                              <strong>
+                                {ticket.ticket_number || `Ticket ${String(getTicketId(ticket)).slice(0, 8)}`}
+                              </strong>
+                              <span>{Math.round(score * 100)}% match</span>
+                            </span>
+                            <span className="admin-related-ticket-subject">
+                              {ticket.subject || "Untitled ticket"}
+                            </span>
+                            <span className="admin-related-ticket-meta">
+                              {sameCategory ? `${ticket.category} · ` : ""}
+                              Shared terms: {sharedTerms.join(", ")}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </section>
 
                   <section className="admin-section-card">
@@ -791,9 +901,23 @@ export default function AdminDashboard({ logout = () => {} }) {
   );
 }
 
-function Stat({ label, value, icon, urgent = false }) {
+function Stat({ label, value, icon, urgent = false, action, active = false }) {
+  const className = `admin-stat-card ${urgent ? "admin-stat-urgent" : ""} ${active ? "is-active" : ""}`;
+
+  if (action) {
+    return (
+      <button type="button" className={className} onClick={action} aria-pressed={active}>
+        <div className="admin-stat-icon">{icon}</div>
+        <div className="admin-stat-copy">
+          <span>{label}</span>
+          <strong>{value}</strong>
+        </div>
+      </button>
+    );
+  }
+
   return (
-    <article className={`admin-stat-card ${urgent ? "admin-stat-urgent" : ""}`}>
+    <article className={className}>
       <div className="admin-stat-icon">{icon}</div>
       <div className="admin-stat-copy">
         <span>{label}</span>

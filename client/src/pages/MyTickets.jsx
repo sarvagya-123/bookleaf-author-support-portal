@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import './MyTickets.css';
-
-const API = 'http://localhost:5000/api';
+import { API_BASE_URL } from '../api';
 
 const MyTickets = () => {
   const [tickets, setTickets] = useState([]);
@@ -15,7 +14,7 @@ const MyTickets = () => {
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [mobileView, setMobileView] = useState('list'); // list | detail
 
-  const getToken = () => {
+  const getToken = useCallback(() => {
     const token =
       localStorage.getItem('bookleaf_token') || localStorage.getItem('token');
 
@@ -24,12 +23,12 @@ const MyTickets = () => {
     }
 
     return token;
-  };
+  }, []);
 
-  const apiRequest = async (url, options = {}) => {
+  const apiRequest = useCallback(async (url, options = {}) => {
     const token = getToken();
 
-    const response = await fetch(`${API}${url}`, {
+    const response = await fetch(`${API_BASE_URL}${url}`, {
       ...options,
       headers: {
         Authorization: `Bearer ${token}`,
@@ -55,11 +54,11 @@ const MyTickets = () => {
     }
 
     return data;
-  };
+  }, [getToken]);
 
-  const fetchTickets = useCallback(async () => {
+  const fetchTickets = useCallback(async (showLoading = true) => {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       setError('');
 
       const data = await apiRequest('/tickets');
@@ -78,13 +77,13 @@ const MyTickets = () => {
     } catch (err) {
       setError(err.message || 'Unable to load support tickets.');
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
-  }, []);
+  }, [apiRequest]);
 
-  const fetchTicketMessages = useCallback(async (ticketId) => {
+  const fetchTicketMessages = useCallback(async (ticketId, showLoading = true) => {
     try {
-      setMessagesLoading(true);
+      if (showLoading) setMessagesLoading(true);
       setMessageError('');
 
       const data = await apiRequest(`/tickets/${ticketId}/messages`);
@@ -100,13 +99,36 @@ const MyTickets = () => {
       setMessages([]);
       setMessageError(err.message || 'Unable to load ticket messages.');
     } finally {
-      setMessagesLoading(false);
+      if (showLoading) setMessagesLoading(false);
     }
-  }, []);
+  }, [apiRequest]);
 
   useEffect(() => {
-    fetchTickets();
+    const timer = window.setTimeout(() => {
+      fetchTickets();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
   }, [fetchTickets]);
+
+  useEffect(() => {
+    const refresh = window.setInterval(() => {
+      fetchTickets(false);
+    }, 15000);
+
+    return () => window.clearInterval(refresh);
+  }, [fetchTickets]);
+
+  useEffect(() => {
+    const ticketId = selectedTicket?.id;
+    if (!ticketId) return undefined;
+
+    const refresh = window.setInterval(() => {
+      fetchTicketMessages(ticketId, false);
+    }, 15000);
+
+    return () => window.clearInterval(refresh);
+  }, [selectedTicket?.id, fetchTicketMessages]);
 
   const handleSelectTicket = (ticket) => {
     setSelectedTicket(ticket);

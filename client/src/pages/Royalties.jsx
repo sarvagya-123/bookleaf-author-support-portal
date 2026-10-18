@@ -1,8 +1,7 @@
 
-import { useState, useEffect } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import './Royalties.css';
-
-const API = 'http://localhost:5000/api';
+import { API_BASE_URL } from '../api';
 
 const Royalties = () => {
   const [books, setBooks] = useState([]);
@@ -14,11 +13,7 @@ const Royalties = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    fetchRoyaltyData();
-  }, []);
-
-  const fetchRoyaltyData = async () => {
+  const fetchRoyaltyData = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
@@ -29,7 +24,7 @@ const Royalties = () => {
         throw new Error('Your session has expired. Please log in again.');
       }
 
-      const response = await fetch(`${API}/books`, {
+      const response = await fetch(`${API_BASE_URL}/books`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -91,7 +86,15 @@ const Royalties = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      fetchRoyaltyData();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [fetchRoyaltyData]);
 
   const formatCurrency = (amount) =>
     `₹${Number(amount || 0).toLocaleString('en-IN', {

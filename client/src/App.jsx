@@ -1,7 +1,9 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import './App.css';
 
+import { API_BASE_URL } from './api';
+import Landing from './Landing';
 import Sidebar from './components/Sidebar';
 import Topbar from './components/Topbar';
 import Overview from './pages/Overview';
@@ -10,8 +12,6 @@ import Royalties from './pages/Royalties';
 import MyTickets from './pages/MyTickets';
 import ContactSupport from './pages/ContactSupport';
 import AdminDashboard from './admin/AdminDashboard';
-
-const API = 'http://localhost:5000/api';
 
 const PAGE_ALIASES = {
   dashboard: 'overview',
@@ -46,30 +46,26 @@ function clearStoredSession() {
 }
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userEmail, setUserEmail] = useState('');
-  const [currentPage, setCurrentPage] = useState('overview');
-  const [role, setRole] = useState(null);
-  const [checkingSession, setCheckingSession] = useState(true);
-
-  useEffect(() => {
+  const [initialSession] = useState(() => {
     const token = localStorage.getItem('bookleaf_token');
     const savedUser = localStorage.getItem('bookleaf_user');
     const savedRole = localStorage.getItem('role');
 
     if (token && savedUser && ['author', 'admin'].includes(savedRole)) {
-      setUserEmail(savedUser);
-      setRole(savedRole);
-      setIsLoggedIn(true);
-    } else {
-      clearStoredSession();
+      return { savedUser, savedRole };
     }
 
-    setCheckingSession(false);
-  }, []);
+    clearStoredSession();
+    return null;
+  });
+  const [isLoggedIn, setIsLoggedIn] = useState(Boolean(initialSession));
+  const [userEmail, setUserEmail] = useState(initialSession?.savedUser || '');
+  const [currentPage, setCurrentPage] = useState('overview');
+  const [role, setRole] = useState(initialSession?.savedRole || null);
+  const [authRole, setAuthRole] = useState(null);
 
   async function handleLogin(email, password, loginRole) {
-    const response = await fetch(`${API}/auth/login`, {
+    const response = await fetch(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -105,8 +101,42 @@ function App() {
       );
     }
 
-    const savedEmail = data.user?.email || email.trim();
+    completeAuthentication(data, email, actualRole);
+  }
 
+  async function handleRegister({ email, password, name, inviteCode }, signupRole) {
+    const endpoint =
+      signupRole === 'admin' ? '/auth/register-admin' : '/auth/register';
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({ email: email.trim(), password, name, inviteCode }),
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(data.message || data.error || 'Account creation failed.');
+    }
+
+    if (!data.token) {
+      throw new Error('The server did not return an authentication token.');
+    }
+
+    completeAuthentication(data, email, signupRole);
+  }
+
+  function completeAuthentication(data, email, expectedRole) {
+    const actualRole = data.user?.role || data.role;
+
+    if (actualRole !== expectedRole || !data.token) {
+      throw new Error('The server returned an invalid account session.');
+    }
+
+    const savedEmail = data.user?.email || email.trim();
     clearStoredSession();
     localStorage.setItem('bookleaf_token', data.token);
     localStorage.setItem('bookleaf_user', savedEmail);
@@ -114,6 +144,7 @@ function App() {
 
     setUserEmail(savedEmail);
     setRole(actualRole);
+    setAuthRole(null);
     setCurrentPage('overview');
     setIsLoggedIn(true);
   }
@@ -140,16 +171,19 @@ function App() {
     window.location.reload();
   }
 
-  if (checkingSession) {
-    return (
-      <div className="loading-container" role="status">
-        Loading BookLeaf...
-      </div>
-    );
-  }
-
   if (!isLoggedIn) {
-    return <LoginPage onLogin={handleLogin} />;
+    if (!authRole) {
+      return <Landing onSelect={setAuthRole} />;
+    }
+
+    return (
+      <PortalAuth
+        role={authRole}
+        onBack={() => setAuthRole(null)}
+        onLogin={handleLogin}
+        onRegister={handleRegister}
+      />
+    );
   }
 
   // Admin has its own layout. Do not render author navigation here.
@@ -183,7 +217,6 @@ function App() {
       <Sidebar
         currentPage={currentPage}
         onNavigate={handleNavigate}
-        userEmail={userEmail}
         onLogout={handleLogout}
       />
 
@@ -203,12 +236,15 @@ function App() {
   );
 }
 
-function LoginPage({ onLogin }) {
+function PortalAuth({ role, onBack, onLogin, onRegister }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loginRole, setLoginRole] = useState('author');
+  const [name, setName] = useState('');
+  const [inviteCode, setInviteCode] = useState('');
+  const [mode, setMode] = useState('login');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const isAdmin = role === 'admin';
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -216,7 +252,11 @@ function LoginPage({ onLogin }) {
     setSubmitting(true);
 
     try {
-      await onLogin(email, password, loginRole);
+      if (mode === 'register') {
+        await onRegister({ email, password, name, inviteCode }, role);
+      } else {
+        await onLogin(email, password, role);
+      }
     } catch (err) {
       setError(err.message || 'Login failed. Please try again.');
     } finally {
@@ -227,12 +267,62 @@ function LoginPage({ onLogin }) {
   return (
     <div className="auth-login">
       <div className="auth-card">
+        <button className="auth-back" type="button" onClick={onBack}>
+          ← Choose another workspace
+        </button>
         <p className="brand">BOOKLEAF</p>
 
-        <h1>{loginRole === 'admin' ? 'Admin Panel' : 'Author Portal'}</h1>
-        <p className="subtitle">Sign in to your account</p>
+        <h1>{isAdmin ? 'Operations desk' : 'Author workspace'}</h1>
+        <p className="subtitle">
+          {mode === 'register'
+            ? 'Create an account to access your workspace.'
+            : 'Sign in to your account.'}
+        </p>
+
+        <div className="auth-mode-switch" role="tablist" aria-label="Account access">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mode === 'login'}
+            className={mode === 'login' ? 'active' : ''}
+            onClick={() => {
+              setMode('login');
+              setError('');
+            }}
+          >
+            Sign in
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mode === 'register'}
+            className={mode === 'register' ? 'active' : ''}
+            onClick={() => {
+              setMode('register');
+              setError('');
+            }}
+          >
+            Create account
+          </button>
+        </div>
 
         <form onSubmit={handleSubmit}>
+          {mode === 'register' && (
+            <label htmlFor="register-name">
+              Full name
+              <input
+                id="register-name"
+                type="text"
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                placeholder="Enter your name"
+                autoComplete="name"
+                maxLength={120}
+                required
+              />
+            </label>
+          )}
+
           <label htmlFor="login-email">Email Address</label>
           <input
             id="login-email"
@@ -244,6 +334,20 @@ function LoginPage({ onLogin }) {
             required
           />
 
+          {mode === 'register' && isAdmin && (
+            <label htmlFor="admin-invite-code">
+              Admin invitation code
+              <input
+                id="admin-invite-code"
+                type="password"
+                value={inviteCode}
+                onChange={(event) => setInviteCode(event.target.value)}
+                autoComplete="off"
+                required
+              />
+            </label>
+          )}
+
           <label htmlFor="login-password">Password</label>
           <input
             id="login-password"
@@ -251,19 +355,11 @@ function LoginPage({ onLogin }) {
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             placeholder="Enter your password"
-            autoComplete="current-password"
+            autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
+            minLength={mode === 'register' ? 8 : undefined}
+            maxLength={128}
             required
           />
-
-          <label htmlFor="login-role">Login As</label>
-          <select
-            id="login-role"
-            value={loginRole}
-            onChange={(event) => setLoginRole(event.target.value)}
-          >
-            <option value="author">Author</option>
-            <option value="admin">Admin</option>
-          </select>
 
           {error && (
             <div className="error" role="alert">
@@ -273,19 +369,23 @@ function LoginPage({ onLogin }) {
 
           <button
             type="submit"
-            className={
-              loginRole === 'admin'
-                ? 'auth-submit-admin'
-                : 'auth-submit-author'
-            }
+            className={isAdmin ? 'auth-submit-admin' : 'auth-submit-author'}
             disabled={submitting}
           >
-            {submitting ? 'Signing in...' : 'Sign In'}
+            {submitting
+              ? mode === 'register'
+                ? 'Creating account...'
+                : 'Signing in...'
+              : mode === 'register'
+                ? 'Create account'
+                : 'Sign in'}
           </button>
         </form>
 
         <p className="footer">
-          Sign in using an account already created in your database.
+          {isAdmin
+            ? 'Admin accounts require a valid invitation code.'
+            : 'Your account is securely connected to your author profile.'}
         </p>
       </div>
     </div>

@@ -1,0 +1,491 @@
+.lp {
+  --lp-blue: #2d6d99;
+  --lp-blue-deep: #245a82;
+  min-height: 100svh;
+  display: grid;
+  grid-template-columns: minmax(0, 1.04fr) minmax(430px, 0.96fr);
+  gap: clamp(14px, 2vw, 28px);
+  padding: clamp(12px, 2vw, 28px);
+  background: var(--paper);
+}
+
+.lp-photo {
+  position: relative;
+  min-width: 0;
+  height: calc(100svh - 56px);
+  min-height: 540px;
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: var(--r-sm);
+  background: var(--ink);
+  perspective: 2400px;
+  perspective-origin: 15% 50%;
+}
+
+.lp-photo::after,
+.lp-photo::before {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+}
+
+.lp-photo::after {
+  z-index: 1;
+  background: linear-gradient(
+    180deg,
+    rgba(12, 27, 47, 0) 52%,
+    rgba(12, 27, 47, 0.72)
+  );
+}
+
+.lp-photo::before {
+  z-index: 2;
+  background: linear-gradient(90deg, rgba(12, 27, 47, 0.5), transparent 62%);
+  opacity: 0;
+  animation: lp-shade 1700ms cubic-bezier(0.76, 0, 0.24, 1) 400ms backwards;
+}
+
+.lp-media {
+  position: absolute;
+  inset: 0;
+  transition: transform 1400ms cubic-bezier(0.16, 1, 0.3, 1),
+    filter 1000ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lp-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 48%;
+  animation: lp-settle 2400ms cubic-bezier(0.16, 1, 0.3, 1) 400ms backwards;
+}
+
+.lp-spine {
+  position: absolute;
+  z-index: 4;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 3px;
+  background: linear-gradient(180deg, var(--gold), var(--gold-dark));
+  transform-origin: top;
+  animation: lp-draw-y 900ms cubic-bezier(0.76, 0, 0.24, 1) 100ms backwards;
+}
+
+.lp-caption {
+  position: absolute;
+  z-index: 2;
+  right: clamp(20px, 3vw, 44px);
+  bottom: clamp(20px, 3vw, 40px);
+  left: clamp(20px, 3vw, 44px);
+  max-width: 26ch;
+  margin: 0;
+  color: #fff;
+  font: 500 clamp(1.3rem, 2vw, 1.8rem) / 1.2 "Cormorant Garamond", Georgia, serif;
+  animation: lp-fade 1000ms ease-out 2000ms backwards;
+}
+
+.lp-leaf {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  visibility: hidden;
+  background: linear-gradient(90deg, #e6e0d3, var(--paper) 10%, var(--paper));
+  transform: rotateY(-110deg);
+  transform-origin: left center;
+  backface-visibility: hidden;
+  animation: lp-leaf 1700ms cubic-bezier(0.76, 0, 0.24, 1) 400ms backwards;
+}
+
+.lp-leaf-mark {
+  display: grid;
+  justify-items: center;
+  gap: 1.1rem;
+  color: var(--ink);
+  font: 500 clamp(2.4rem, 4vw, 3.6rem) / 1 "Cormorant Garamond", Georgia, serif;
+}
+
+.lp-leaf-mark::after {
+  width: 56px;
+  height: 1px;
+  background: var(--gold);
+  content: "";
+}
+
+.lp-content {
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 650px);
+  min-height: calc(100svh - 56px);
+  justify-self: center;
+  padding: clamp(28px, 4.4vw, 64px) clamp(28px, 5vw, 76px);
+  border-left: 1px solid rgba(45, 109, 153, 0.12);
+  background: #f7fafb;
+  color: var(--ink);
+}
+
+.lp-masthead {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.lp-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: var(--ink);
+  font: 600 1.8rem / 1 "Cormorant Garamond", Georgia, serif;
+}
+
+.lp-brand svg {
+  color: var(--gold-dark);
+}
+
+.lp-masthead-label,
+.lp-copy-kicker,
+.lp-roles-heading span {
+  color: var(--lp-blue-deep);
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+.lp-copy {
+  margin: auto 0 2rem;
+}
+
+.lp-copy-kicker {
+  margin: 0 0 1.1rem;
+}
+
+.lp-title {
+  max-width: none;
+  margin: 0 0 1.25rem;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: clamp(2.45rem, 5vw, 4.4rem);
+  font-weight: 600;
+  line-height: 0.98;
+}
+
+.lp-line {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.06em;
+  animation: lp-line-up 1100ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+.lp-line-accent {
+  color: var(--lp-blue-deep);
+  font-style: italic;
+  animation-delay: 990ms;
+}
+
+.lp-sub {
+  max-width: 36ch;
+  margin: 0;
+  color: #526477;
+  font-size: 1rem;
+  line-height: 1.65;
+  animation: lp-fade 900ms ease-out 1450ms backwards;
+}
+
+.lp-notice {
+  margin: 0 0 1rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid #f2c6c4;
+  border-radius: 4px;
+  background: #fff0ee;
+  color: var(--danger);
+  font-size: 0.84rem;
+}
+
+.lp-roles-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.7rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--line);
+}
+
+.lp-roles-heading h2 {
+  margin: 0;
+  color: var(--ink);
+  font: 500 1.35rem / 1.1 "Cormorant Garamond", Georgia, serif;
+}
+
+.lp-roles {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.lp-role {
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 2.25rem;
+  align-items: center;
+  gap: 1rem;
+  overflow: hidden;
+  width: 100%;
+  min-height: 100px;
+  padding: 1rem 1.15rem;
+  border: 1px solid rgba(19, 36, 59, 0.18);
+  border-radius: var(--r-sm);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: color 400ms ease-out, border-color 400ms ease-out,
+    background 400ms ease-out;
+  animation: lp-wipe 900ms cubic-bezier(0.16, 1, 0.3, 1) calc(1500ms + var(--i) * 110ms) backwards;
+}
+
+.lp-role::before {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 4px;
+  background: var(--lp-blue);
+  content: "";
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform 500ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lp-role > span,
+.lp-role > svg {
+  position: relative;
+  z-index: 2;
+}
+
+.lp-role strong {
+  display: block;
+  color: var(--ink);
+  font: 600 1.35rem / 1.05 "Cormorant Garamond", Georgia, serif;
+}
+
+.lp-role small {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.lp-role .lp-role-audience {
+  margin: 0 0 0.3rem;
+  color: var(--lp-blue-deep);
+  font-size: 0.64rem;
+  font-weight: 600;
+}
+
+.lp-role svg {
+  justify-self: end;
+  width: 36px;
+  height: 36px;
+  padding: 0.4rem;
+  border: 1px solid var(--lp-blue);
+  border-radius: 50%;
+  color: var(--lp-blue-deep);
+  transition: transform 450ms ease-out, color 300ms ease-out,
+    background 300ms ease-out;
+}
+
+.lp-role-author {
+  background: #fff;
+}
+
+.lp-role-admin {
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.lp-role:hover,
+.lp-role:focus-visible {
+  border-color: var(--lp-blue);
+  background: #eaf2f7;
+}
+
+.lp-role:hover::before,
+.lp-role:focus-visible::before {
+  transform: scaleY(1);
+}
+
+.lp-role:hover svg,
+.lp-role:focus-visible svg {
+  color: #fff;
+  background: var(--lp-blue);
+  transform: translateX(3px);
+}
+
+.lp-footer {
+  margin-top: 1.8rem;
+  color: #818895;
+  font-size: 0.76rem;
+}
+
+@media (hover: hover) {
+  .lp:has(.lp-role:hover) .lp-media {
+    transform: scale(1.045);
+  }
+}
+
+@media (min-width: 901px) and (max-height: 900px) {
+  .lp-content {
+    padding-top: 24px;
+    padding-bottom: 24px;
+  }
+
+  .lp-copy {
+    margin-bottom: 1.25rem;
+  }
+
+  .lp-roles-heading {
+    padding-top: 0.8rem;
+    margin-bottom: 0.55rem;
+  }
+
+  .lp-role {
+    min-height: 76px;
+    padding: 0.85rem 1.1rem;
+  }
+
+  .lp-footer {
+    margin-top: 1rem;
+  }
+}
+
+@keyframes lp-leaf {
+  0% { visibility: visible; transform: rotateY(0); }
+  99% { visibility: visible; }
+  100% { visibility: hidden; transform: rotateY(-110deg); }
+}
+
+@keyframes lp-shade {
+  0%, 100% { opacity: 0; }
+  40% { opacity: 1; }
+}
+
+@keyframes lp-settle {
+  from { transform: scale(1.16); }
+  to { transform: scale(1); }
+}
+
+@keyframes lp-draw-y {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+
+@keyframes lp-line-up {
+  from { transform: translateY(110%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes lp-wipe {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0); }
+}
+
+@keyframes lp-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (max-width: 900px) {
+  .lp {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+    align-content: start;
+    gap: 0;
+    padding: 0;
+  }
+
+  .lp-photo {
+    height: 34svh;
+    min-height: 220px;
+    max-height: 320px;
+    border-radius: 0;
+  }
+
+  .lp-content {
+    width: 100%;
+    max-width: 760px;
+    min-height: 66svh;
+    padding: 28px 32px 24px;
+  }
+
+  .lp-copy {
+    margin: 34px 0 1.8rem;
+  }
+
+  .lp-footer {
+    margin-top: auto;
+    padding-top: 1.25rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .lp-photo {
+    height: 26svh;
+    min-height: 180px;
+    max-height: 250px;
+  }
+
+  .lp-content {
+    min-height: 72svh;
+    padding: 22px 24px;
+  }
+
+  .lp-role {
+    min-height: 88px;
+    padding: 0.85rem 0.95rem;
+  }
+
+  .lp-role strong {
+    font-size: 1.25rem;
+  }
+
+  .lp-role small {
+    font-size: 0.74rem;
+  }
+
+  .lp-copy-kicker {
+    margin-bottom: 0.75rem;
+  }
+
+  .lp-caption {
+    display: none;
+  }
+}
+
+@media (max-width: 420px) {
+  .lp-content {
+    min-height: 78svh;
+    padding-right: 20px;
+    padding-left: 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp *,
+  .lp *::before,
+  .lp *::after {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .lp-leaf {
+    display: none;
+  }
+}

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import './Sidebar.css';
 
-const Sidebar = ({ currentPage, onNavigate, userEmail, onLogout }) => {
+const Sidebar = ({ currentPage, onNavigate, onLogout }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const menuItems = [

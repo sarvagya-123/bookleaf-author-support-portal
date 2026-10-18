@@ -6,17 +6,23 @@ const cors = require("cors");
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://bookleaf-author-support-portal-one.vercel.app",
+  "https://bookleaf-author-support-portal-as5jii013.vercel.app",
+  ...(process.env.CLIENT_ORIGINS || "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean),
+];
+
 // Trust configuration
 app.disable("x-powered-by");
 
 // Middleware
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "https://bookleaf-author-support-portal-one.vercel.app",
-      "https://bookleaf-author-support-portal-as5jii013.vercel.app",
-    ],
+    origin: allowedOrigins,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
@@ -37,7 +43,6 @@ app.get("/api/health", (req, res) => {
 app.use("/api/auth", require("./routes/auth.routes"));
 app.use("/api/books", require("./routes/books.routes"));
 app.use("/api/tickets", require("./routes/tickets.routes"));
-app.use("/api/messages", require("./routes/messages.routes"));
 app.use("/api/admin", require("./routes/admin.routes"));
 app.use("/api/ai", require("./routes/ai.routes"));
 

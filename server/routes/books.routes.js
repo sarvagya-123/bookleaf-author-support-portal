@@ -1,6 +1,5 @@
 
 const express = require("express");
-const { randomUUID } = require("crypto");
 const router = express.Router();
 
 const pool = require("../db");
@@ -9,8 +8,7 @@ const {
   requireRole,
 } = require("../middleware/auth");
 
-// All book endpoints require an authenticated author.
-router.use(authenticateToken, requireRole("author"));
+router.use(authenticateToken);
 
 async function getAuthor(userId) {
   const result = await pool.query(
@@ -76,7 +74,7 @@ const BOOK_SELECT = `
 `;
 
 // GET /api/books
-router.get("/", async (req, res) => {
+router.get("/", requireRole("author"), async (req, res) => {
   try {
     const author = await getAuthor(req.user.id);
 
@@ -112,7 +110,7 @@ router.get("/", async (req, res) => {
 });
 
 // GET /api/books/royalties/summary
-router.get("/royalties/summary", async (req, res) => {
+router.get("/royalties/summary", requireRole("author"), async (req, res) => {
   try {
     const author = await getAuthor(req.user.id);
 
@@ -153,14 +151,14 @@ router.get("/royalties/summary", async (req, res) => {
     console.error("Royalty summary error:", error.message);
 
     return res.status(500).json({
-      success: true,
+      success: false,
       message: "Failed to fetch royalty summary.",
     });
   }
 });
 
 // GET /api/books/royalties/breakdown
-router.get("/royalties/breakdown", async (req, res) => {
+router.get("/royalties/breakdown", requireRole("author"), async (req, res) => {
   try {
     const author = await getAuthor(req.user.id);
 
@@ -205,7 +203,7 @@ router.get("/royalties/breakdown", async (req, res) => {
 });
 
 // GET /api/books/search/:query
-router.get("/search/:query", async (req, res) => {
+router.get("/search/:query", requireRole("author"), async (req, res) => {
   try {
     const author = await getAuthor(req.user.id);
 
@@ -248,7 +246,7 @@ router.get("/search/:query", async (req, res) => {
 });
 
 // GET /api/books/:id
-router.get("/:id", async (req, res) => {
+router.get("/:id", requireRole("author"), async (req, res) => {
   try {
     const author = await getAuthor(req.user.id);
 
@@ -289,7 +287,7 @@ router.get("/:id", async (req, res) => {
 });
 
 // POST /api/books — create a draft book.
-router.post("/", async (req, res) => {
+router.post("/", requireRole("author"), async (req, res) => {
   try {
     const author = await getAuthor(req.user.id);
 
@@ -376,7 +374,7 @@ router.post("/", async (req, res) => {
 });
 
 // PUT /api/books/:id — update book details.
-router.put("/:id", async (req, res) => {
+router.put("/:id", requireRole("author"), async (req, res) => {
   try {
     const author = await getAuthor(req.user.id);
 
@@ -461,7 +459,7 @@ router.put("/:id", async (req, res) => {
 });
 
 // DELETE /api/books/:id
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", requireRole("author"), async (req, res) => {
   try {
     const author = await getAuthor(req.user.id);
 
@@ -476,14 +474,17 @@ router.delete("/:id", async (req, res) => {
       `DELETE FROM public.books
        WHERE book_id = $1
          AND author_id = $2
-       RETURNING book_id, title`,
+        AND status = 'Draft'
+        AND COALESCE(total_copies_sold, 0) = 0
+        AND COALESCE(total_royalty_earned, 0) = 0
+      RETURNING book_id, title`,
       [req.params.id, author.author_id]
     );
 
     if (!result.rowCount) {
       return res.status(404).json({
         success: false,
-        message: "Book not found.",
+        message: "Book not found or is not an unsold draft.",
       });
     }
 

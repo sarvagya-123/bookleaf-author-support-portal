@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import './Books.css';
-
-const API = 'http://localhost:5000/api';
+import { API_BASE_URL } from '../api';
 
 const Books = () => {
   const [books, setBooks] = useState([]);
@@ -10,11 +9,7 @@ const Books = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    fetchBooks();
-  }, []);
-
-  const fetchBooks = async () => {
+  const fetchBooks = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
@@ -25,7 +20,7 @@ const Books = () => {
         throw new Error('Your session has expired. Please log in again.');
       }
 
-      const response = await fetch(`${API}/books`, {
+      const response = await fetch(`${API_BASE_URL}/books`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -35,7 +30,7 @@ const Books = () => {
 
       if (!contentType.includes('application/json')) {
         throw new Error(
-          'The books API returned HTML instead of JSON. Check that the backend is running on port 5000 and /api/books is registered.'
+          'The books API returned HTML instead of JSON. Check the configured API URL and /api/books route.'
         );
       }
 
@@ -57,7 +52,15 @@ const Books = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      fetchBooks();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [fetchBooks]);
 
   const filteredBooks = books.filter((book) => {
     const title = book.title || '';

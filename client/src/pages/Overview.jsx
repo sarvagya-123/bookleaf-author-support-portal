@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import './Overview.css';
-
-const API = 'http://localhost:5000/api';
+import { API_BASE_URL } from '../api';
 
 const EMPTY_ROYALTIES = {
   earned: 0,
@@ -19,7 +18,7 @@ function getErrorMessage(error, fallback) {
 }
 
 async function apiRequest(path, token) {
-  const response = await fetch(`${API}${path}`, {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
     headers: {
       Accept: 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -30,7 +29,7 @@ async function apiRequest(path, token) {
 
   if (!contentType.includes('application/json')) {
     throw new Error(
-      `Unexpected response from ${path}. Check that the backend is running on port 5000.`
+      `Unexpected response from ${path}. Check the configured API URL and backend route.`
     );
   }
 
@@ -268,7 +267,11 @@ const Overview = ({ onNavigate }) => {
   }, []);
 
   useEffect(() => {
-    fetchOverviewData();
+    const timer = window.setTimeout(() => {
+      fetchOverviewData();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
   }, [fetchOverviewData]);
 
   const goTo = (page) => {

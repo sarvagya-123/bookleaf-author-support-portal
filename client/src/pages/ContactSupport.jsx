@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import './ContactSupport.css';
+import { API_BASE_URL } from '../api';
 
-const API = 'http://localhost:5000/api';
 const MAX_FILES = 5;
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
@@ -59,7 +59,7 @@ const ContactSupport = () => {
           throw new Error('Your session has expired. Please log in again.');
         }
 
-        const response = await fetch(`${API}/books`, {
+        const response = await fetch(`${API_BASE_URL}/books`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -224,7 +224,7 @@ const ContactSupport = () => {
         bookId: formData.bookId || null,
       };
 
-      const response = await fetch(`${API}/tickets`, {
+      const response = await fetch(`${API_BASE_URL}/tickets`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

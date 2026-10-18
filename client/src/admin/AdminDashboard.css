@@ -217,7 +217,7 @@
 
 .admin-stats-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 12px;
   margin-bottom: 20px;
 }
@@ -233,6 +233,25 @@
   border-radius: 12px;
   background: var(--admin-surface);
   box-shadow: var(--admin-shadow);
+}
+
+.admin-stat-card.is-active {
+  border-color: #d99a42;
+  background: #fffbf3;
+  box-shadow: 0 0 0 2px rgba(217, 154, 66, 0.12);
+}
+
+button.admin-stat-card {
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  transition: border-color 0.16s ease, background 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+button.admin-stat-card:hover {
+  border-color: #d6b47d;
 }
 
 .admin-stat-icon {
@@ -585,6 +604,21 @@
   text-overflow: ellipsis;
 }
 
+.admin-ticket-card-age {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+  color: #7b8794;
+  font-size: 9px;
+}
+
+.admin-ticket-card-age .is-aging {
+  color: #a65b08;
+  font-weight: 800;
+}
+
 .admin-empty-state {
   display: flex;
   min-height: 180px;
@@ -748,6 +782,73 @@
   font-size: 12px;
   line-height: 1.8;
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.admin-related-empty {
+  margin: 0;
+  color: var(--admin-muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.admin-related-list {
+  display: grid;
+  gap: 9px;
+}
+
+.admin-related-ticket {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: 6px;
+  padding: 11px 12px;
+  border: 1px solid #dce9e1;
+  border-radius: 8px;
+  background: #fbfefc;
+  color: var(--admin-ink);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.admin-related-ticket:hover,
+.admin-related-ticket:focus-visible {
+  border-color: #77aa91;
+  background: #f1f8f3;
+}
+
+.admin-related-ticket:focus-visible {
+  outline: 3px solid rgb(36 116 91 / 18%);
+  outline-offset: 2px;
+}
+
+.admin-related-ticket-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--admin-green);
+  font-size: 10px;
+}
+
+.admin-related-ticket-heading > span {
+  flex-shrink: 0;
+  color: #637968;
+  font-weight: 700;
+}
+
+.admin-related-ticket-subject {
+  font-size: 12px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.admin-related-ticket-meta {
+  color: var(--admin-muted);
+  font-size: 10px;
+  line-height: 1.5;
   overflow-wrap: anywhere;
 }
 
