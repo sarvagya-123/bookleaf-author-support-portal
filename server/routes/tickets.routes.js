@@ -3,6 +3,8 @@ const router = express.Router();
 const pool = require("../db");
 const {
   authenticateToken,
+  DEMO_AUTHOR_ID,
+  isDemoAdmin,
   requireRole,
 } = require("../middleware/auth");
 const { suggestClassification } = require("../ai.service");
@@ -45,13 +47,22 @@ router.get(
       let result;
 
       if (req.user.role === "admin") {
+        const values = [limit];
+        let demoScope = "";
+
+        if (isDemoAdmin(req.user)) {
+          values.push(DEMO_AUTHOR_ID);
+          demoScope = `WHERE t.author_id = $${values.length}`;
+        }
+
         result = await pool.query(
           `SELECT t.*, b.title AS book_title
            FROM public.tickets t
            LEFT JOIN public.books b ON b.book_id = t.book_id
+           ${demoScope}
            ORDER BY t.created_at DESC
            LIMIT $1`,
-          [limit]
+          values
         );
       } else {
         const authorId = await getAuthorId(req.user.id);
@@ -111,6 +122,9 @@ router.get(
 
         params.push(authorId);
         ownership = "AND t.author_id = $2";
+      } else if (isDemoAdmin(req.user)) {
+        params.push(DEMO_AUTHOR_ID);
+        ownership = "AND t.author_id = $2";
       }
 
       const result = await pool.query(
@@ -163,6 +177,9 @@ router.get(
         }
 
         params.push(authorId);
+        ownership = "AND t.author_id = $2";
+      } else if (isDemoAdmin(req.user)) {
+        params.push(DEMO_AUTHOR_ID);
         ownership = "AND t.author_id = $2";
       }
 

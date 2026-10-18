@@ -2,6 +2,8 @@ const express = require("express");
 const pool = require("../db");
 const {
   authenticateToken,
+  DEMO_AUTHOR_ID,
+  isDemoAdmin,
   requireRole,
 } = require("../middleware/auth");
 
@@ -29,6 +31,11 @@ router.get(
       const { status, category, priority, from_date } = req.query;
       const conditions = [];
       const values = [];
+
+      if (isDemoAdmin(req.user)) {
+        values.push(DEMO_AUTHOR_ID);
+        conditions.push(`t.author_id = $${values.length}`);
+      }
 
       if (status) {
         if (!STATUSES.includes(status)) {
@@ -335,6 +342,16 @@ router.get(
   requireRole("admin"),
   async (req, res) => {
     try {
+      const demoScope = isDemoAdmin(req.user)
+        ? `AND EXISTS (
+             SELECT 1
+             FROM public.tickets t
+             WHERE t.id = n.ticket_id AND t.author_id = $2
+           )`
+        : "";
+      const params = isDemoAdmin(req.user)
+        ? [req.params.ticketId, DEMO_AUTHOR_ID]
+        : [req.params.ticketId];
       const result = await pool.query(
         `SELECT
             n.id,
@@ -345,8 +362,9 @@ router.get(
          JOIN public.users u
            ON u.id = n.admin_user_id
          WHERE n.ticket_id = $1
+           ${demoScope}
          ORDER BY n.created_at ASC`,
-        [req.params.ticketId]
+        params
       );
 
       return res.json({

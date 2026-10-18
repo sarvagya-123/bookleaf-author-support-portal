@@ -59,14 +59,14 @@ author and book records with the assignment values.
   and known limitations. `APPROACH.md` contains the requested one-page summary.
 - Client lint and production build pass. Changed backend files pass
   `node --check`; no automated test files are present in the repository.
-- No pre-existing demo credentials were identified. The temporary QA accounts
-  were deleted, and no persistent demo users or passwords were published.
+- Read-only author and admin demo logins are published in the README. The
+  author account links to seeded author `AUTH002`; the admin queue is restricted
+  to that author's synthetic demo ticket. Demo accounts cannot perform writes.
 - `OPENROUTER_API_KEY` is present in the API project's Vercel Production
   environment. After deployment of the 1,000-token draft cap, a live hosted
   check returned an AI-sourced draft and the expected classification. An
   earlier empty model response used the built-in fallback; the app remains
-  functional if the free provider is unavailable. No persistent demo accounts
-  were created.
+  functional if the free provider is unavailable.
 
 ## Known limitations
 
