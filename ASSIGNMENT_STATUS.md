@@ -34,15 +34,19 @@ changed.
 - The provided public repository is
   `sarvagya-123/bookleaf-author-support-portal`, default branch `main`, with
   latest visible commit `e1a86a7` (“Configure CORS for production frontend”).
-  Its tree does not include the current root README, assignment status,
+  Its `main` tree does not include the current root README, assignment status,
   Render blueprint, environment examples, local landing page, or similar-ticket
   feature. No non-example `.env` file was found in the public tree.
-- GitHub repository settings show zero collaborators and no pending
-  invitations. Actions secrets/variables are empty, and public metadata shows
-  no visible Actions workflows or GitHub deployments. The repository is
-  connected to Vercel, as shown by the Vercel project source.
-- The local folder is not a Git repository and has no configured remote, so
-  local changes have not been verified as published to GitHub.
+- A clean sync branch, `sync/current-completion-2026-10-18`, was pushed at
+  commit `e443cc2` after collaborator access was granted. The workspace folder
+  itself remains outside a Git worktree; the branch was prepared in an isolated
+  clone. No pull request or merge was created, so `main` and production remain
+  unchanged. Private `.env` files and generated build/dependency folders were
+  excluded from the push.
+- GitHub now grants collaborator access to the publishing account. Actions
+  secrets/variables are empty, and public metadata shows no visible Actions
+  workflows or GitHub deployments. The repository remains connected to Vercel,
+  as shown by the Vercel project source.
 - A full hosted end-to-end check is blocked because the live API and database
   are not verified/reachable from this workspace.
 
@@ -80,7 +84,7 @@ production deployment or verification against the live database.
 | Provided sample dataset (10 authors, 18 books) | **Expected row counts confirmed; exact records not inspected** | Read-only Supabase aggregate counts show 10 authors and 18 books, matching the assignment dataset size. The seed script is present, but the exact sample records and their linkage/contents were intentionally not inspected. |
 | Admin UI revamp and standout features | **Implemented locally** | Admin queue/detail workflow has been revamped. Aging triage highlights unresolved tickets aged 48+ hours. Similar-ticket intelligence now surfaces up to three heuristic matches using shared subject/description terms and category, with clear match reasons and one-click navigation; it never auto-merges records. UI behavior has been exercised using mock ticket data. |
 | Deployment and accessible live demo | **Not complete; production API is unavailable** | Vercel frontend serves an older build pointing to localhost for its API. No `VITE_API_BASE_URL` is configured. The separate API Vercel project has no production deployment or environment variables; public health endpoints return 404. `render.yaml` is only a deployment blueprint. |
-| Source repository and collaborator access | **Partially confirmed; handoff incomplete** | Public repository exists and is connected to Vercel, but its `main` branch is behind current local work. GitHub shows zero collaborators and no pending invitations. The local folder is not a Git repository and has no remote. |
+| Source repository and collaborator access | **Current work pushed to a feature branch; merge pending** | Current source is published on `sync/current-completion-2026-10-18` at `e443cc2`; `main` is unchanged and still behind. Collaborator access was granted to the publishing account. Review and merge the branch before expecting a production Vercel update. |
 | README and API documentation | **Partially complete** | Root README now covers local setup, deployment instructions, accounts, a main endpoint table, validation, and known limitations. Before submission, verify the endpoint table against all mounted routes, add architecture rationale and AI prompt/error/cost/model details, and include the live demo URL and test credentials after provisioning them. |
 | Brief approach write-up (maximum one page) | **Not completed** | Create a separate concise write-up describing priorities, trade-offs, and a production evolution plan. |
 | Full QA | **Partially complete; hosted E2E blocked** | Client lint/build, server syntax, dependency audit, selected API stub checks, local UI smoke checks, and read-only Supabase table/count checks passed. The app's configured database connection still fails authentication. Vercel has no production API deployment and health endpoints return 404, preventing a hosted end-to-end test. |
