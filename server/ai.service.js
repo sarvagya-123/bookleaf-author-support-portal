@@ -65,12 +65,15 @@ Communication Tone Guidelines:
  * @param {Object} ticket - The ticket details (subject, description, category, priority, author_name, book_title)
  * @returns {Promise<string>} - The generated draft reply or a fallback message.
  */
-async function generateDraftReply(ticket) {
+async function generateDraftReplyResult(ticket) {
   const { subject, description, category, priority, author_name, book_title } = ticket;
 
   // Fallback if API key is missing
   if (!process.env.OPENROUTER_API_KEY) {
-    return getFallbackReply(ticket, "API key not configured.");
+    return {
+      draft: getFallbackReply(ticket, "API key not configured."),
+      source: "fallback",
+    };
   }
 
   const prompt = `
@@ -115,14 +118,25 @@ Write a professional, empathetic, and specific draft reply to the author. Start 
 
     if (!content || typeof content !== "string" || !content.trim()) {
       console.warn("AI returned empty content. Using fallback.");
-      return getFallbackReply(ticket, "AI returned an empty response.");
+      return {
+        draft: getFallbackReply(ticket, "AI returned an empty response."),
+        source: "fallback",
+      };
     }
 
-    return content.trim();
+    return { draft: content.trim(), source: "ai" };
   } catch (error) {
     console.error("AI generation error:", error.message);
-    return getFallbackReply(ticket, "AI service is currently unavailable.");
+    return {
+      draft: getFallbackReply(ticket, "AI service is currently unavailable."),
+      source: "fallback",
+    };
   }
+}
+
+async function generateDraftReply(ticket) {
+  const result = await generateDraftReplyResult(ticket);
+  return result.draft;
 }
 
 /**
@@ -207,4 +221,8 @@ function getFallbackReply(ticket, reason) {
   return `Dear Author,\n\nThank you for reaching out to BookLeaf Publishing regarding "${ticket.subject}". We have received your query and are looking into it.\n\nOur team will review your request and get back to you within 48 hours.\n\nBest regards,\nBookLeaf Support Team\n\n(Note: ${reason})`;
 }
 
-module.exports = { generateDraftReply, suggestClassification };
+module.exports = {
+  generateDraftReply,
+  generateDraftReplyResult,
+  suggestClassification,
+};

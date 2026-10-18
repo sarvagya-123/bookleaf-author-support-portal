@@ -217,7 +217,7 @@ router.post(
   authenticateToken,
   requireRole("author"),
   async (req, res) => {
-    const { subject, message, bookId } = req.body;
+    const { subject, message, bookId, category: selectedCategory } = req.body;
 
     if (
       typeof subject !== "string" ||
@@ -230,6 +230,16 @@ router.post(
       return res.status(400).json({
         success: false,
         message: "A subject (max 300 characters) and message (max 10,000 characters) are required.",
+      });
+    }
+
+    if (
+      selectedCategory !== undefined &&
+      !VALID_CATEGORIES.includes(selectedCategory)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid issue category.",
       });
     }
 
@@ -267,9 +277,11 @@ router.post(
         description: message.trim(),
       });
 
-      const category = VALID_CATEGORIES.includes(classification.category)
-        ? classification.category
-        : "General Inquiry";
+      const category =
+        selectedCategory ||
+        (VALID_CATEGORIES.includes(classification.category)
+          ? classification.category
+          : "General Inquiry");
 
       const priority = VALID_PRIORITIES.includes(classification.priority)
         ? classification.priority

@@ -1,5 +1,5 @@
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "./AdminDashboard.css";
 import { API_BASE_URL } from "../api";
 import { findSimilarTickets } from "./similarTickets";
@@ -111,6 +111,7 @@ export default function AdminDashboard({ logout = () => {} }) {
 
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [drafting, setDrafting] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
 
@@ -118,6 +119,8 @@ export default function AdminDashboard({ logout = () => {} }) {
   const [note, setNote] = useState("");
   const [notes, setNotes] = useState([]);
   const [classification, setClassification] = useState(null);
+  const draftRequestId = useRef(0);
+  const draftCache = useRef(new Map());
 
   const selectedTicket = tickets.find(
     (ticket) => String(getTicketId(ticket)) === String(selectedId)
@@ -129,12 +132,23 @@ export default function AdminDashboard({ logout = () => {} }) {
 
   function openTicket(ticket) {
     const ticketId = getTicketId(ticket);
+    const cacheKey = String(ticketId);
+    const requestId = ++draftRequestId.current;
+    const cachedDraft = draftCache.current.get(cacheKey);
+
     setSelectedId(ticketId);
-    setReply("");
+    setReply(cachedDraft || "");
     setNote("");
     setNotes([]);
     setClassification(null);
+    setError("");
+    setNotice(cachedDraft ? "Draft ready. Review and edit it before sending." : "");
+    setDrafting(false);
     loadNotes(ticketId);
+
+    if (!cachedDraft) {
+      generateDraft(ticket, requestId);
+    }
   }
 
   const loadTickets = useCallback(async (showLoading = true) => {
@@ -345,25 +359,27 @@ export default function AdminDashboard({ logout = () => {} }) {
     setClassification(null);
   }
 
-  async function generateDraft() {
-    if (!selectedTicket) return;
+  async function generateDraft(ticket = selectedTicket, requestId) {
+    if (!ticket) return;
 
-    setBusy(true);
+    const currentRequestId = requestId ?? ++draftRequestId.current;
+
+    setDrafting(true);
     setError("");
-    setNotice("");
+    setNotice("Preparing a draft for review...");
 
     try {
       const data = await apiRequest("/ai/draft-reply", {
         method: "POST",
         body: JSON.stringify({
           ticket: {
-            ticket_id: getTicketId(selectedTicket),
-            subject: selectedTicket.subject,
-            description: selectedTicket.description,
-            category: selectedTicket.category,
-            priority: selectedTicket.priority,
-            author_name: selectedTicket.author_name,
-            book_title: selectedTicket.book_title,
+            ticket_id: getTicketId(ticket),
+            subject: ticket.subject,
+            description: ticket.description,
+            category: ticket.category,
+            priority: ticket.priority,
+            author_name: ticket.author_name,
+            book_title: ticket.book_title,
           },
         }),
       });
@@ -378,12 +394,23 @@ export default function AdminDashboard({ logout = () => {} }) {
         throw new Error("The AI service returned no draft text.");
       }
 
-      setReply(draft);
-      setNotice("AI draft generated. Review and edit it before sending.");
+      if (currentRequestId !== draftRequestId.current) return;
+
+      draftCache.current.set(String(getTicketId(ticket)), draft);
+      setReply((current) => current.trim() ? current : draft);
+      setNotice(
+        data.source === "fallback"
+          ? "AI is unavailable or unconfigured; a fallback draft is ready. Review and edit it before sending."
+          : "AI draft generated. Review and edit it before sending."
+      );
     } catch (err) {
-      setError(`Could not generate draft: ${getErrorMessage(err)}`);
+      if (currentRequestId === draftRequestId.current) {
+        setError(`Could not generate draft: ${getErrorMessage(err)}`);
+      }
     } finally {
-      setBusy(false);
+      if (currentRequestId === draftRequestId.current) {
+        setDrafting(false);
+      }
     }
   }
 
@@ -402,6 +429,7 @@ export default function AdminDashboard({ logout = () => {} }) {
         body: JSON.stringify({ message: reply.trim(), reply: reply.trim() }),
       });
 
+      draftCache.current.delete(String(getTicketId(selectedTicket)));
       setReply("");
       setNotice("Reply sent successfully.");
       await loadTickets(false);
@@ -787,17 +815,22 @@ export default function AdminDashboard({ logout = () => {} }) {
                   <section className="admin-section-card">
                     <SectionHeading
                       title="AI assistance"
-                      subtitle="Generate suggestions for an administrator to review"
+                      subtitle="A reply draft is prepared when you open a ticket. Review and edit before sending."
                     />
 
                     <div className="admin-ai-actions">
                       <button className="admin-button admin-button-primary" onClick={classifyTicket} disabled={busy}>
                         ✦ Classify with AI
                       </button>
-                      <button className="admin-button admin-button-secondary" onClick={generateDraft} disabled={busy}>
-                        ✦ Draft a reply
+                      <button className="admin-button admin-button-secondary" onClick={() => generateDraft()} disabled={busy || drafting}>
+                        ✦ Regenerate draft
                       </button>
                     </div>
+                    {drafting && (
+                      <p className="admin-ai-reason" role="status">
+                        Preparing a reply draft...
+                      </p>
+                    )}
 
                     {classification && (
                       <div className="admin-ai-result">

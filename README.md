@@ -54,14 +54,20 @@ non-sample production data.
 
 ## Deployment
 
-`render.yaml` describes the Express API as a Render web service. Create a
-Render Blueprint from the repository and configure its private environment
-variables: `DATABASE_URL`, `JWT_SECRET`, `ADMIN_SIGNUP_SECRET`, and optionally
-`OPENROUTER_API_KEY`. Set `CLIENT_ORIGINS` to the Vercel frontend origin.
+The current production frontend is
+`https://bookleaf-author-support-portal-one.vercel.app`; its API is
+`https://bookleaf-api-ten.vercel.app`. The Vercel projects deploy from `main`.
+Set the API project's private `DATABASE_URL`, `JWT_SECRET`,
+`ADMIN_SIGNUP_SECRET`, and (if enabling provider-backed AI)
+`OPENROUTER_API_KEY` variables. Set the frontend's `VITE_API_BASE_URL` to
+`https://bookleaf-api-ten.vercel.app/api`. Redeploy after changing environment
+variables. Never put server credentials in a `VITE_` variable or commit `.env`
+files.
 
-After the API deploys, set `VITE_API_BASE_URL` in the Vercel frontend project's
-environment variables to `https://<api-host>/api` and redeploy the frontend.
-Never add server credentials to a `VITE_` variable or commit `.env` files.
+The API falls back to deterministic, clearly labeled drafts and classification
+when the OpenRouter key is absent or the provider fails. The production Vercel
+environment did not have `OPENROUTER_API_KEY` at the last check; hosted AI
+therefore uses the fallback until that variable is configured.
 
 ## API overview
 
@@ -90,6 +96,8 @@ author book and ticket data are scoped to the signed-in author.
 | GET | `/tickets/:id` | Owner/admin | Read a ticket |
 | GET | `/tickets/:id/messages` | Owner/admin | Read ticket conversation |
 | POST | `/tickets/:id/messages` | Author | Add a message to an open owned ticket |
+| PUT | `/tickets/:id` | Admin | Update status, priority, or assignment |
+| POST | `/tickets/:id/close` | Admin | Close a ticket |
 | GET | `/admin/tickets` | Admin | List/filter the operations queue |
 | PATCH | `/admin/tickets/:ticketId` | Admin | Update status, priority, or category |
 | PATCH | `/admin/tickets/:ticketId/assign` | Admin | Assign ticket to the signed-in admin |
@@ -104,6 +112,31 @@ three related tickets using an explainable keyword/category heuristic; it is a
 review aid, not an AI decision or automatic duplicate merge. File attachments
 are currently a UI selection only and are not uploaded.
 
+## Architecture and AI approach
+
+The React/Vite client talks to an Express API; PostgreSQL/Supabase stores
+accounts, author profiles, books, royalty data, tickets, replies, and private
+notes. JWT role checks protect admin actions, while author queries are scoped
+through the linked author profile. Ticket conversations are polled rather than
+kept on a persistent connection.
+
+Ticket classification and reply drafting use OpenRouter's
+`nvidia/nemotron-3-super-120b-a12b:free` route when configured. Prompts include
+the relevant ticket fields and a compact BookLeaf policy knowledge base. The
+model is asked to return a fixed classification schema or a concise,
+empathetic draft with a clear next step; drafts are reviewed and edited by an
+admin and are never sent automatically. Opening a ticket requests a draft;
+the admin can regenerate it. If the provider is unavailable, fallback output
+is labeled as such. An author's selected issue category is retained while the
+fallback supplies the default priority.
+
+Generation is capped at 200 tokens for classification and 500 for a draft.
+The configured `:free` provider route has no committed per-token budget, but
+availability and provider limits can change. The app currently has no
+application-level AI rate limiter or usage budget; production use should add
+per-account throttling, provider usage monitoring, and a spend/availability
+alert before enabling a paid model.
+
 ## Validation
 
 ```powershell
@@ -116,16 +149,16 @@ npm audit
 
 ## Known limitations
 
-- A live Supabase connection and deployed API have not been verified from this
-  workspace. The Vercel frontend domain needs a separately deployed API unless
-  a same-origin API proxy is configured.
 - The repository does not include database migration files. The API and seed
   script require the tables/columns already provisioned in PostgreSQL.
-- AI quality, real ticket persistence, and cross-account authorization need
-  end-to-end verification against a reachable test database.
 - Signup currently has no email-verification flow; matching an existing
   author profile by email alone is not proof that the registrant owns that
   address.
 - Real-time updates use polling, not WebSockets or server-sent events.
+- Attachments are only selected in the UI; upload/storage is not implemented.
+- The sample JSON and current Supabase data share all 10 author IDs, 18 book
+  IDs, and author-book links, but several date and royalty fields differ.
+  Review `ASSIGNMENT_STATUS.md` before running `server/seed.js`, since it
+  upserts those fields.
 - Rotate any credential previously shared in screenshots; local `.env` files
   are ignored by Git and must remain private.

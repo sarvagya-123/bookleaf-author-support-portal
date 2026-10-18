@@ -1,6 +1,9 @@
 const express = require("express");
 const { authenticateToken, requireRole } = require("../middleware/auth");
-const { generateDraftReply, suggestClassification } = require("../ai.service");
+const {
+  generateDraftReplyResult,
+  suggestClassification,
+} = require("../ai.service");
 
 const router = express.Router();
 
@@ -30,11 +33,12 @@ router.post(
         });
       }
 
-      const draft = await generateDraftReply(ticket);
+      const result = await generateDraftReplyResult(ticket);
 
       return res.json({
         success: true,
-        draft: draft,
+        draft: result.draft,
+        source: result.source,
       });
     } catch (error) {
       console.error("AI route error:", error.message);
