@@ -111,7 +111,7 @@ Write a professional, empathetic, and specific draft reply to the author. Start 
         { role: "user", content: prompt }
       ],
       temperature: 0.3,
-      max_tokens: 500,
+      max_tokens: 1000,
     });
 
     const content = response?.choices?.[0]?.message?.content;

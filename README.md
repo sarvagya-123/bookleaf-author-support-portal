@@ -136,7 +136,7 @@ the admin can regenerate it. If the provider is unavailable, fallback output
 is labeled as such. An author's selected issue category is retained while the
 fallback supplies the default priority.
 
-Generation is capped at 400 tokens for classification and 500 for a draft.
+Generation is capped at 400 tokens for classification and 1,000 for a draft.
 The app currently has no application-level AI rate limiter or usage budget;
 production use should add per-account throttling, provider usage monitoring,
 and a spend/availability alert before enabling a paid model.

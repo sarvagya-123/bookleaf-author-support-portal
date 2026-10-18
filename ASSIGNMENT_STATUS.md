@@ -13,8 +13,10 @@
   automatically. After `OPENROUTER_API_KEY` was added to the API project's
   Vercel Production environment and the API was redeployed, a synthetic hosted
   check returned `source: "ai"` and a 120-word draft beginning `Dear Author,`.
-  The admin UI continues to identify fallback drafts if the provider is
-  unavailable.
+  A later request returned empty model content and correctly used the labeled
+  fallback. The draft output cap was increased from 500 to 1,000 tokens to
+  reduce reasoning-token truncation; the new deployment still needs a live
+  acceptance check.
 - Admin status update, assignment, private note, and public reply succeeded.
   The author saw the public reply and could not see the private note.
 - The deployed book-create route returned HTTP 201 and its draft-delete route
@@ -28,10 +30,12 @@
   route is listed at zero prompt/completion pricing. Its initial 200-token
   classification cap cut off internal reasoning and sometimes yielded empty
   content; the cap was raised to 400 after a controlled comparison returned
-  valid JSON and the expected royalty category. The live production API now
-  classifies the royalty question as `Royalty & Payments` / `Medium` and returns
-  an AI-sourced draft. Its classification rationale was non-empty and matched
-  the synthetic ticket. The temporary admin used for this check was removed.
+  valid JSON and the expected royalty category. The live production API
+  classified the synthetic royalty question as `Royalty & Payments` / `Medium`
+  with a matching rationale. One provider-backed draft succeeded; a later
+  model response was empty, so the API used its fallback. The draft cap is now
+  1,000 tokens to reduce the risk of reasoning consuming the response budget.
+  The temporary admin used for hosted checks was removed.
 - Temporary QA author/admin accounts, two synthetic hosted tickets, their
   messages, and private notes were removed. Supabase aggregate counts returned
   to baseline: 10 authors, 18 books, 3 users, 2 tickets, 5 messages, 1 note.
@@ -58,10 +62,11 @@ author and book records with the assignment values.
   `node --check`; no automated test files are present in the repository.
 - No pre-existing demo credentials were identified. The temporary QA accounts
   were deleted, and no persistent demo users or passwords were published.
-- Provider-backed AI acceptance is complete: the Production variable is
-  present, the redeployed API returned an AI-sourced draft and classification,
-  and the temporary test account was removed. No persistent demo accounts were
-  created.
+- `OPENROUTER_API_KEY` is present in the API project's Vercel Production
+  environment. Provider-backed classification and a draft have each succeeded
+  in hosted checks, but the free model has also returned an empty draft and
+  triggered the built-in fallback. The increased draft token cap awaits a
+  post-deployment check. No persistent demo accounts were created.
 
 ## Known limitations
 
