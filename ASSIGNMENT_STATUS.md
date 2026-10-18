@@ -11,17 +11,20 @@ approved local API end-to-end test later created uniquely labeled temporary QA
 accounts and a ticket, then removed those exact rows and confirmed all six
 aggregate counts returned to their original values.
 
-- The Vercel frontend project is connected to the GitHub repository's `main`
-  branch and its current production deployment is **Ready** at commit
-  `e1a86a7`. That is the older published version: it shows a sign-in-first UI,
-  unlike the current local landing/workspace chooser. Its public JavaScript
-  references `http://localhost:5000/api`, not a public API URL.
-- The Vercel frontend project has **no environment variables**, including no
-  `VITE_API_BASE_URL`. The separate `bookleaf-api` Vercel project has **no
-  production deployment** and **no environment variables**. Both its
-  `bookleaf-api-ten.vercel.app/api/health` and the frontend's `/api/health`
-  return 404. The secondary frontend deployment redirects to Vercel login
-  protection.
+- The `bookleaf-api` Vercel Production deployment is **Ready** at commit
+  `27dedf8` on `main`, at `https://bookleaf-api-ten.vercel.app`. Its production
+  `DATABASE_URL`, `JWT_SECRET`, and `ADMIN_SIGNUP_SECRET` are configured as
+  secrets. The public `/api/health` endpoint returned HTTP 200. A non-existent
+  account login returned the expected HTTP 401, confirming a database-backed
+  lookup without changing data.
+- The frontend Vercel Production deployment is **Ready** at commit `27dedf8`
+  on `main`, at `https://bookleaf-author-support-portal-one.vercel.app`.
+  `VITE_API_BASE_URL` is configured for Production as
+  `https://bookleaf-api-ten.vercel.app/api`. The landing page and author
+  sign-in screen loaded. From the frontend origin, API health returned HTTP
+  200, missing login fields returned HTTP 400, and a non-existent account
+  returned HTTP 401. The production CORS preflight allowed the frontend origin.
+  No hosted account, ticket, or other persistent test data was created.
 - Read-only queries in the Supabase SQL Editor confirmed the six expected
   public tables: `authors`, `books`, `users`, `tickets`, `ticket_messages`,
   and `ticket_notes`. Aggregate counts were: 10 authors, 18 books, 3 users,
@@ -35,24 +38,19 @@ aggregate counts returned to their original values.
   password in ignored `server/.env`. Existing rows are confirmed, but new app
   writes and end-to-end persistence have not been tested.
 - The provided public repository is
-  `sarvagya-123/bookleaf-author-support-portal`, default branch `main`, with
-  latest visible commit `e1a86a7` (“Configure CORS for production frontend”).
-  Its `main` tree does not include the current root README, assignment status,
-  Render blueprint, environment examples, local landing page, or similar-ticket
-  feature. No non-example `.env` file was found in the public tree.
-- A clean sync branch, `sync/current-completion-2026-10-18`, was pushed at
-  commit `5770b37` after collaborator access was granted. The workspace folder
-  itself remains outside a Git worktree; the branch was prepared in an isolated
-  clone. No pull request or merge was created, so `main` and production remain
-  unchanged. Private `.env` files and generated build/dependency folders were
-  excluded from the push.
+  `sarvagya-123/bookleaf-author-support-portal`, default branch `main`, now at
+  commit `27dedf8` (“Record local Supabase end-to-end QA results”). The current
+  completion branch was fast-forwarded into `main` after authorization.
+  Private `.env` files and generated build/dependency folders were excluded
+  from the push.
 - GitHub now grants collaborator access to the publishing account. Actions
   secrets/variables are empty, and public metadata shows no visible Actions
   workflows or GitHub deployments. The repository remains connected to Vercel,
   as shown by the Vercel project source.
-- A full hosted end-to-end check is blocked because there is no deployed,
-  reachable API. Local app writes, role checks, and ticket flows have now been
-  tested against Supabase using temporary QA data that was removed afterward.
+- Hosted health, CORS, frontend loading, and non-mutating authentication
+  validation have been checked. Authenticated author/admin browser workflows,
+  hosted ticket writes, live AI-provider behavior, and responsive/empty/error
+  states still need end-to-end QA.
 
 ## Overall assessment
 
@@ -61,8 +59,9 @@ author/admin experiences, REST API, AI-assisted ticket handling, sample-data
 seed script, and an aging-ticket queue signal are implemented. The intended
 Supabase schema, aggregate data counts, and core local app write/read flows
 are verified. The public frontend appears stale and points at a localhost API URL.
-The assignment requires a working live demo with pre-seeded data and test
-credentials. The required one-page approach write-up is also still missing.
+The assignment now has working Production frontend and API deployments. It
+still needs authenticated live-demo QA and test credentials, and the required
+one-page approach write-up is missing.
 
 “Implemented” below means code/UI is present; it does not imply successful
 production deployment or verification against the live database.
@@ -82,15 +81,15 @@ production deployment or verification against the live database.
 | AI-drafted response from BookLeaf knowledge base | **Partially implemented** | The AI service includes the supplied policy knowledge base, prompt guidance, and fallback reply; admins can request a draft and edit it. The draft is generated on demand using a button, rather than being automatically presented when opening a ticket as the brief describes. Verify the provider output against the sample-query expectations and confirm the draft UI/API round trip. |
 | Ticket status, private notes, assignment | **Locally verified against Supabase** | A temporary admin updated ticket status/category/priority, assigned it, posted a reply, and added/read a private note. The author saw the reply but not the note and was denied the admin-only notes endpoint. Temporary data was removed afterward. |
 | REST API, auth, roles, validation, errors | **Core local paths verified** | Local health, invalid login input, protected-route denial, signup/login/token verification, author scoping, and admin workflows were exercised against Supabase. The README endpoint table still needs reconciliation against every route/method before submission. |
-| AI key security and failure handling | **Implemented; deployment configuration pending** | AI key is server-side environment configuration; AI service has fallback behavior. Keep all secrets out of client build variables and configure private values only in the deployed API environment. |
+| AI key security and failure handling | **Implemented; API secrets configured** | Required API secrets are configured server-side in Vercel Production. The optional AI provider key and live provider/fallback behavior have not been tested in the hosted deployment. Keep secrets out of client build variables. |
 | Cost awareness and model choice documentation | **Partially documented** | Calls are limited to ticket details plus the relevant knowledge-base prompt rather than a full ticket history. The README does not yet explain why the selected OpenRouter model/provider was chosen, expected cost/token strategy, or rate-limit controls. Add this explanation and validate current model availability. |
 | Provided sample dataset (10 authors, 18 books) | **Expected row counts confirmed; exact records not inspected** | Read-only Supabase aggregate counts show 10 authors and 18 books, matching the assignment dataset size. The seed script is present, but the exact sample records and their linkage/contents were intentionally not inspected. |
 | Admin UI revamp and standout features | **Implemented locally** | Admin queue/detail workflow has been revamped. Aging triage highlights unresolved tickets aged 48+ hours. Similar-ticket intelligence now surfaces up to three heuristic matches using shared subject/description terms and category, with clear match reasons and one-click navigation; it never auto-merges records. UI behavior has been exercised using mock ticket data. |
-| Deployment and accessible live demo | **Not complete; production API is unavailable** | Vercel frontend serves an older build pointing to localhost for its API. No `VITE_API_BASE_URL` is configured. The separate API Vercel project has no production deployment or environment variables; public health endpoints return 404. `render.yaml` is only a deployment blueprint. |
-| Source repository and collaborator access | **Current work pushed to a feature branch; merge pending** | Current source is published on `sync/current-completion-2026-10-18` at `f27f167`; `main` is unchanged and still behind. Collaborator access was granted to the publishing account. Review and merge the branch before expecting a production Vercel update. |
+| Deployment and accessible live demo | **Production deployments ready; authenticated demo QA pending** | API is live at `https://bookleaf-api-ten.vercel.app` and frontend at `https://bookleaf-author-support-portal-one.vercel.app`, both from commit `27dedf8`. Health, browser-origin CORS, and non-mutating login checks passed. Verify authenticated author/admin flows and supply safe demo credentials before submission. `render.yaml` remains an unused deployment alternative. |
+| Source repository and collaborator access | **Current work merged to `main`** | `sync/current-completion-2026-10-18` was fast-forwarded into `main` at `27dedf8`; Production deployments now use that commit. Collaborator access was granted to the publishing account. |
 | README and API documentation | **Partially complete** | Root README now covers local setup, deployment instructions, accounts, a main endpoint table, validation, and known limitations. Before submission, verify the endpoint table against all mounted routes, add architecture rationale and AI prompt/error/cost/model details, and include the live demo URL and test credentials after provisioning them. |
 | Brief approach write-up (maximum one page) | **Not completed** | Create a separate concise write-up describing priorities, trade-offs, and a production evolution plan. |
-| Full QA | **Core local API/database E2E passed; hosted/UI E2E pending** | Client lint/build, server syntax, dependency audit, API stub checks, local UI smoke checks, health/auth guards, and 29 assertions across temporary Supabase author/admin/ticket workflows passed. QA rows were removed and all aggregate counts returned to baseline. AI provider behavior and full browser/UI-to-API flow were not tested. Vercel has no production API deployment and health endpoints return 404, preventing hosted E2E. |
+| Full QA | **Core local API/database E2E passed; hosted smoke checks passed** | Client lint/build, server syntax, dependency audit, API stub checks, local UI smoke checks, and 29 assertions across temporary Supabase author/admin/ticket workflows passed. QA rows were removed and aggregate counts returned to baseline. Hosted frontend/API health, CORS, and non-existent-account login were verified without persistent writes; authenticated browser workflows and AI provider behavior remain untested. |
 
 ## `revamp.md` phase check
 
@@ -100,22 +99,23 @@ production deployment or verification against the live database.
 | Fix authentication and database persistence | **Core local flows verified; production hardening pending** | Temporary author/admin signups and logins, ticket writes/reads, private-note isolation, and cross-author ownership checks passed against Supabase; test rows were cleaned up. Seeded-profile linking by email still lacks ownership verification and should be addressed before relying on it in production. |
 | Revamp admin experience | **Implemented locally** | Queue filtering, ticket details, admin operations, aging metric/filter, and ticket-age/assignment visibility are present. |
 | Add one standout feature | **Implemented locally** | The unresolved-over-48-hours aging triage metric/filter was added. |
-| QA, deployment, submission readiness | **Local API/database E2E passed; hosted deployment needs repair** | Core local API/database flows passed. The public frontend appears stale and configured for localhost API; its health path returns 404. Hosted demo credentials, source branch review/merge, final README details, and one-page write-up remain. |
+| QA, deployment, submission readiness | **Production deployed; final hosted QA and submission work remain** | Production API and frontend are Ready on `main` at `27dedf8`; smoke checks passed. Authenticated hosted workflows, demo credentials, final README details, and the one-page write-up remain. |
 
 ## Remaining work, in recommended order
 
 1. **Finish local UI-to-API QA.** Exercise the browser signup/login and full author/admin pages against the local API, including books, royalties, AI fallback, and responsive/error states. Core API/database flows are already covered through 29 assertions.
-2. **Repair and complete deployment.** Deploy the API with private server variables (Render blueprint or correctly configured serverless API), set frontend `VITE_API_BASE_URL` to that public API (never localhost), configure CORS, and redeploy the current frontend. Verify health and login/ticket flows.
-3. **Prepare the submission.** Review and merge the current feature branch, seed the live demo with the exact 10 authors and 18 books only if needed, and add working author/admin test credentials to the README without exposing secrets.
+2. **Complete hosted browser QA.** Use authorized test accounts to verify author/admin sign-in, books/royalties, ticket creation/replies/private notes, admin triage, and responsive/error states against the deployed API. Avoid seeding or modifying existing data unless needed and explicitly approved.
+3. **Prepare the submission.** Confirm safe author/admin demo credentials and document them appropriately; seed the live demo with the exact 10 authors and 18 books only if needed.
 5. **Finish documentation.** Add the missing one-page approach write-up. Expand README with architecture decisions, AI model/provider rationale, prompt strategy, fallback/rate-limit behavior, and cost/token considerations; reconcile endpoint docs with the mounted API routes.
 6. **Close AI acceptance gaps.** Decide whether to change the UI so an AI draft is presented automatically when an admin opens a ticket, as the brief requests; otherwise document the on-demand behavior as an intentional trade-off. Verify the chosen model/provider and sample-query quality.
 7. **Repeat QA on the deployed app.** Exercise author/admin end-to-end journeys, errors and empty states, responsive layouts, and 15-second near-real-time updates using the deployed API and database.
 
 ## Verification boundary
 
-The passed local checks establish that the client builds/lints and that selected
-API behavior works with a stubbed database. They do **not** establish that the
-Supabase schema matches, accounts or tickets persist in the target database,
-the seed was applied there, the AI provider is operational, or the Vercel
-frontend is connected to a deployed backend. Treat those items as incomplete
-until verified.
+The local 29-assertion run established selected API workflows against Supabase
+with temporary rows that were removed. Hosted checks establish that both
+Production deployments are ready, the frontend reaches the API with allowed
+CORS, and authentication performs a database-backed lookup. They do **not**
+establish authenticated hosted author/admin journeys, correctness of all live
+book/royalty data, AI provider availability, or the quality of the full
+browser-based workflow. Treat those items as incomplete until verified.
