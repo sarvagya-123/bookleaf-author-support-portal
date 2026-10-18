@@ -68,7 +68,7 @@ function App() {
   const [currentPage, setCurrentPage] = useState('overview');
   const [role, setRole] = useState(initialSession?.savedRole || null);
   const [authRole, setAuthRole] = useState(null);
-  const isReadOnlyDemo = DEMO_ACCOUNT_EMAILS.has(userEmail.toLowerCase());
+  const isDemoAccount = DEMO_ACCOUNT_EMAILS.has(userEmail.toLowerCase());
 
   async function handleLogin(email, password, loginRole) {
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
@@ -196,7 +196,7 @@ function App() {
   if (role === 'admin') {
     return (
       <div className="admin-app">
-        {isReadOnlyDemo && (
+        {isDemoAccount && (
           <div className="demo-account-banner" role="status">
             Public demo admin: changes are limited to the demo author’s
             tickets.
@@ -241,7 +241,7 @@ function App() {
             onRefresh={handleRefresh}
           />
 
-          {isReadOnlyDemo && (
+          {isDemoAccount && (
             <div className="demo-account-banner" role="status">
               Public demo account: you can explore the seeded books and
               royalties, and manage your demo support requests.
