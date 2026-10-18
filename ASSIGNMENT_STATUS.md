@@ -68,8 +68,9 @@ author and book records with the assignment values.
 - Hosted demo-account checks passed: author login showed two seeded books and
   one ticket; admin login showed only the demo ticket and its private note.
   Demo write attempts returned HTTP 403, and an admin request for another
-  author's ticket returned HTTP 404. Admin AI draft and classification calls
-  succeeded.
+  author's ticket returned HTTP 404. Browser QA confirmed both portal logins,
+  the read-only notices, the correct ticket category, and the admin's generated
+  AI draft. Hosted admin AI classification also succeeded.
 - `OPENROUTER_API_KEY` is present in the API project's Vercel Production
   environment. After deployment of the 1,000-token draft cap, a live hosted
   check returned an AI-sourced draft and the expected classification. An
