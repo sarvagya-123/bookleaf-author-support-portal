@@ -11,12 +11,11 @@
   overflow.
 - Admin login and queue worked. Opening a ticket prepared a response draft
   automatically. After `OPENROUTER_API_KEY` was added to the API project's
-  Vercel Production environment and the API was redeployed, a synthetic hosted
-  check returned `source: "ai"` and a 120-word draft beginning `Dear Author,`.
-  A later request returned empty model content and correctly used the labeled
-  fallback. The draft output cap was increased from 500 to 1,000 tokens to
-  reduce reasoning-token truncation; the new deployment still needs a live
-  acceptance check.
+  Vercel Production environment and the API was redeployed, synthetic hosted
+  checks returned `source: "ai"` and drafts beginning `Dear Author,`. One
+  request on the earlier 500-token cap returned empty content and correctly
+  used the labeled fallback. The cap was increased to 1,000 tokens; the
+  post-change production check returned a 133-word AI draft.
 - Admin status update, assignment, private note, and public reply succeeded.
   The author saw the public reply and could not see the private note.
 - The deployed book-create route returned HTTP 201 and its draft-delete route
@@ -32,10 +31,10 @@
   content; the cap was raised to 400 after a controlled comparison returned
   valid JSON and the expected royalty category. The live production API
   classified the synthetic royalty question as `Royalty & Payments` / `Medium`
-  with a matching rationale. One provider-backed draft succeeded; a later
-  model response was empty, so the API used its fallback. The draft cap is now
-  1,000 tokens to reduce the risk of reasoning consuming the response budget.
-  The temporary admin used for hosted checks was removed.
+  with a matching rationale and returned a non-empty AI-sourced draft after the
+  draft cap was raised to 1,000 tokens. The temporary admin used for hosted
+  checks was removed. The labeled fallback remains active if the free model
+  returns empty content or is unavailable.
 - Temporary QA author/admin accounts, two synthetic hosted tickets, their
   messages, and private notes were removed. Supabase aggregate counts returned
   to baseline: 10 authors, 18 books, 3 users, 2 tickets, 5 messages, 1 note.
@@ -63,10 +62,11 @@ author and book records with the assignment values.
 - No pre-existing demo credentials were identified. The temporary QA accounts
   were deleted, and no persistent demo users or passwords were published.
 - `OPENROUTER_API_KEY` is present in the API project's Vercel Production
-  environment. Provider-backed classification and a draft have each succeeded
-  in hosted checks, but the free model has also returned an empty draft and
-  triggered the built-in fallback. The increased draft token cap awaits a
-  post-deployment check. No persistent demo accounts were created.
+  environment. After deployment of the 1,000-token draft cap, a live hosted
+  check returned an AI-sourced draft and the expected classification. An
+  earlier empty model response used the built-in fallback; the app remains
+  functional if the free provider is unavailable. No persistent demo accounts
+  were created.
 
 ## Known limitations
 
