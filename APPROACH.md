@@ -24,9 +24,8 @@ model.
 
 The main trade-offs are a compact existing database schema, polling instead
 of persistent real-time connections, and attachment selection without upload
-storage. The sample dataset's IDs and author-book relationships match the
-provided JSON, but some dates and royalty values differ, so existing hosted
-records were preserved instead of reseeding. Before broader production use,
-the next steps are verified email ownership for seeded-profile linking,
-versioned migrations, row-level database policies, durable attachment
-storage, automated API/UI tests, and operational monitoring.
+storage. The assignment dataset was seeded to Supabase and verified field by
+field against the provided JSON. Before broader production use, the next steps
+are verified email ownership for seeded-profile linking, versioned migrations,
+row-level database policies, durable attachment storage, automated API/UI
+tests, and operational monitoring.

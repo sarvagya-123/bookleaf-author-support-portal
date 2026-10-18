@@ -123,19 +123,21 @@ kept on a persistent connection.
 Ticket classification and reply drafting use OpenRouter's
 `nvidia/nemotron-3-super-120b-a12b:free` route when configured. Prompts include
 the relevant ticket fields and a compact BookLeaf policy knowledge base. The
-model is asked to return a fixed classification schema or a concise,
+route is currently listed by OpenRouter at zero prompt/completion pricing; it
+was chosen for a useful context window and provider-backed text quality without
+per-token charges. OpenRouter's free-model availability and limits can change.
+The API key must be configured only on the server. The model is asked to return
+a fixed classification schema or a concise,
 empathetic draft with a clear next step; drafts are reviewed and edited by an
 admin and are never sent automatically. Opening a ticket requests a draft;
 the admin can regenerate it. If the provider is unavailable, fallback output
 is labeled as such. An author's selected issue category is retained while the
 fallback supplies the default priority.
 
-Generation is capped at 200 tokens for classification and 500 for a draft.
-The configured `:free` provider route has no committed per-token budget, but
-availability and provider limits can change. The app currently has no
-application-level AI rate limiter or usage budget; production use should add
-per-account throttling, provider usage monitoring, and a spend/availability
-alert before enabling a paid model.
+Generation is capped at 400 tokens for classification and 500 for a draft.
+The app currently has no application-level AI rate limiter or usage budget;
+production use should add per-account throttling, provider usage monitoring,
+and a spend/availability alert before enabling a paid model.
 
 ## Validation
 
@@ -157,8 +159,8 @@ npm audit
 - Real-time updates use polling, not WebSockets or server-sent events.
 - Attachments are only selected in the UI; upload/storage is not implemented.
 - The sample JSON and current Supabase data share all 10 author IDs, 18 book
-  IDs, and author-book links, but several date and royalty fields differ.
-  Review `ASSIGNMENT_STATUS.md` before running `server/seed.js`, since it
-  upserts those fields.
+  IDs, all author-book links, and every data field as of 18 October 2026.
+  `server/seed.js` upserts the assignment data; rerunning it will overwrite
+  later changes to those sample author and book records.
 - Rotate any credential previously shared in screenshots; local `.env` files
   are ignored by Git and must remain private.

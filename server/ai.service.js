@@ -183,7 +183,7 @@ Return ONLY a valid JSON object in this exact format, with no extra text:
         { role: "user", content: prompt }
       ],
       temperature: 0.1,
-      max_tokens: 200,
+      max_tokens: 400,
     });
 
     const content = response?.choices?.[0]?.message?.content;

@@ -21,24 +21,29 @@
 - A synthetic ticket with an explicitly selected `Royalty & Payments` category
   retained that category through the hosted API and displayed it in the author
   ticket list. Missing-provider fallback supplied the default `Medium` priority.
-- Local OpenRouter acceptance checks used synthetic tickets only. Two category
-  predictions matched their expected categories. The generated draft began
-  `Dear Author,`, was 137 words, and included a next step. Hosted AI-provider
-  behavior itself remains unverified until the provider key is configured.
+- OpenRouter checks used synthetic tickets only. The selected free Nemotron
+  route is listed at zero prompt/completion pricing. Its initial 200-token
+  classification cap cut off internal reasoning and sometimes yielded empty
+  content; the cap was raised to 400 after a controlled comparison returned
+  valid JSON and the expected royalty category. Draft output began
+  `Dear Author,` and included the royalty timing guidance. Hosted AI-provider
+  behavior remains unverified until the key is configured in Vercel.
 - Temporary QA author/admin accounts, two synthetic hosted tickets, their
   messages, and private notes were removed. Supabase aggregate counts returned
   to baseline: 10 authors, 18 books, 3 users, 2 tickets, 5 messages, 1 note.
 
 ## Dataset comparison
 
-The assignment JSON and Supabase contain all 10 expected author IDs, all 18
-book IDs, and all 18 matching author-book relationships. Values differ:
-`joined_date` for 10/10 authors; `publication_date`, `mrp`, and
-`author_royalty_per_copy` for 16/18 books; `total_royalty_earned`,
-`royalty_paid`, and `royalty_pending` for 18/18 books; and
-`last_royalty_payout_date` for 12/18 books. No production sample data was
-changed. Do not run `server/seed.js` against this database without deciding
-which values are authoritative; the script upserts these fields.
+The attached assignment JSON was compared with the checked-in
+`server/data/bookleaf_sample_data.json`; both contain the same 10 authors and
+18 books, with every field identical. The transaction-safe seed script was run
+against Supabase to upsert these exact sample values while preserving linked
+user IDs. A read-only, field-by-field verification then reported zero
+mismatches across all author and book fields. Aggregate counts remain 10
+authors, 18 books, 3 users, 2 tickets, 5 messages, and 1 private note.
+
+Running `server/seed.js` again will overwrite later changes to the sample
+author and book records with the assignment values.
 
 ## Submission and remaining decisions
 
@@ -49,10 +54,9 @@ which values are authoritative; the script upserts these fields.
   `node --check`; no automated test files are present in the repository.
 - No pre-existing demo credentials were identified. The temporary QA accounts
   were deleted, and no persistent demo users or passwords were published.
-- To finish hosted AI acceptance, configure `OPENROUTER_API_KEY` in the API's
-  Vercel Production environment and redeploy. Decide separately whether to
-  create persistent demo accounts and whether to align the differing sample
-  dates/royalty fields; neither was changed without approval.
+- To finish hosted provider-backed AI acceptance, add `OPENROUTER_API_KEY` to
+  the API's Vercel Production environment and redeploy. The deployed fallback
+  remains available until then. No persistent demo accounts were created.
 
 ## Known limitations
 
