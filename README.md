@@ -23,6 +23,22 @@ and manage that author's tickets, but not other authors' tickets. The author
 demo account is linked to the seeded author profile. These are public demo
 credentials, not private production administrator credentials.
 
+### Reviewer test data
+
+Both credentials above were verified against the live API. The author demo
+opens the seeded `AUTH002` profile, which currently has two sample books and
+one support ticket. The admin demo sees that ticket in its queue and can
+exercise status/priority/category updates, assignment, public replies, and
+private notes. Its data access remains restricted to `AUTH002`.
+
+To test the portals, open the live URL, choose the matching workspace, select
+**Sign in**, and use the corresponding email/password from the table. The
+public author account is writable, so changes made during a review may remain
+in its demo profile. The assignment dataset itself contains 10 sample authors
+and 18 sample books. Seven of the other sample author profiles are currently
+unlinked and can be linked through author signup using their corresponding
+email addresses.
+
 ## Assignment coverage
 
 ### Author workspace
@@ -325,8 +341,11 @@ creation/replies/status/assignment/notes, AI fallback/provider behavior, role
 checks, and demo-admin scope. Temporary acceptance-test records were removed
 after testing. The Supabase sample author/book records were compared
 field-by-field with the checked-in assignment JSON on 18 October 2026; all 10
-authors and 18 books matched. Current Supabase sample/demo totals are 10
-authors, 18 books, 5 users, 3 tickets, 6 messages, and 2 notes.
+sample authors and 18 books matched. The live database also contains accounts
+created for testing beyond the 10 sample author profiles, so aggregate author
+and user counts can exceed the assignment dataset. At the latest verification,
+the database contained 11 author profiles, 18 books, 7 users, 3 tickets,
+6 messages, and 2 notes.
 
 See [APPROACH.md](./APPROACH.md) for the one-page implementation approach and
 [ASSIGNMENT_STATUS.md](./ASSIGNMENT_STATUS.md) for hosted QA and dataset
