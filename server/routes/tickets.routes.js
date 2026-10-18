@@ -5,6 +5,7 @@ const {
   authenticateToken,
   DEMO_AUTHOR_ID,
   isDemoAdmin,
+  requireDemoTicketScope,
   requireRole,
 } = require("../middleware/auth");
 const { suggestClassification } = require("../ai.service");
@@ -435,6 +436,7 @@ router.put(
   "/:id",
   authenticateToken,
   requireRole("admin"),
+  requireDemoTicketScope("id"),
   async (req, res) => {
     try {
       const { status, priority, assignedTo } = req.body;
@@ -517,6 +519,7 @@ router.post(
   "/:id/close",
   authenticateToken,
   requireRole("admin"),
+  requireDemoTicketScope("id"),
   async (req, res) => {
     try {
       const result = await pool.query(

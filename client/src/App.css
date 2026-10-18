@@ -379,7 +379,7 @@ button:disabled {
   margin: 0 auto;
 }
 
-.demo-readonly-banner {
+.demo-account-banner {
   margin: 0 0 var(--gap);
   padding: 0.85rem 1rem;
   border: 1px solid rgba(149, 108, 54, 0.28);

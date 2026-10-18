@@ -4,6 +4,7 @@ const {
   authenticateToken,
   DEMO_AUTHOR_ID,
   isDemoAdmin,
+  requireDemoTicketScope,
   requireRole,
 } = require("../middleware/auth");
 
@@ -136,6 +137,7 @@ router.patch(
   "/tickets/:ticketId",
   authenticateToken,
   requireRole("admin"),
+  requireDemoTicketScope("ticketId"),
   async (req, res) => {
     try {
       const { ticketId } = req.params;
@@ -217,6 +219,7 @@ router.post(
   "/tickets/:ticketId/replies",
   authenticateToken,
   requireRole("admin"),
+  requireDemoTicketScope("ticketId"),
   async (req, res) => {
     try {
       const { ticketId } = req.params;
@@ -282,6 +285,7 @@ router.post(
   "/tickets/:ticketId/notes",
   authenticateToken,
   requireRole("admin"),
+  requireDemoTicketScope("ticketId"),
   async (req, res) => {
     try {
       const { ticketId } = req.params;
@@ -340,6 +344,7 @@ router.get(
   "/tickets/:ticketId/notes",
   authenticateToken,
   requireRole("admin"),
+  requireDemoTicketScope("ticketId"),
   async (req, res) => {
     try {
       const demoScope = isDemoAdmin(req.user)
@@ -387,6 +392,7 @@ router.patch(
   "/tickets/:ticketId/assign",
   authenticateToken,
   requireRole("admin"),
+  requireDemoTicketScope("ticketId"),
   async (req, res) => {
     try {
       const result = await pool.query(

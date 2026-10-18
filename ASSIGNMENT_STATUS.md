@@ -62,15 +62,15 @@ author and book records with the assignment values.
   and known limitations. `APPROACH.md` contains the requested one-page summary.
 - Client lint and production build pass. Changed backend files pass
   `node --check`; no automated test files are present in the repository.
-- Read-only author and admin demo logins are published in the README. The
-  author account links to seeded author `AUTH002`; the admin queue is restricted
-  to that author's synthetic demo ticket. Demo accounts cannot perform writes.
+- Author and admin demo logins are published in the README. The author account
+  links to seeded author `AUTH002`; the admin can modify tickets for that
+  author only and cannot read or change another author's tickets.
 - Hosted demo-account checks passed: author login showed two seeded books and
   one ticket; admin login showed only the demo ticket and its private note.
-  Demo write attempts returned HTTP 403, and an admin request for another
-  author's ticket returned HTTP 404. Browser QA confirmed both portal logins,
-  the read-only notices, the correct ticket category, and the admin's generated
-  AI draft. Hosted admin AI classification also succeeded.
+  Browser QA confirmed both portal logins, the correct ticket category, and
+  the admin's generated AI draft. Hosted admin AI classification also
+  succeeded. Demo writes are enabled for the author's own data and the admin's
+  scoped ticket queue.
 - `OPENROUTER_API_KEY` is present in the API project's Vercel Production
   environment. After deployment of the 1,000-token draft cap, a live hosted
   check returned an AI-sourced draft and the expected classification. An

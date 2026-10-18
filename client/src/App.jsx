@@ -197,9 +197,9 @@ function App() {
     return (
       <div className="admin-app">
         {isReadOnlyDemo && (
-          <div className="demo-readonly-banner" role="status">
-            Public demo account: read-only. The queue is limited to sample
-            data; AI drafts can be generated but not sent or saved.
+          <div className="demo-account-banner" role="status">
+            Public demo admin: changes are limited to the demo author’s
+            tickets.
           </div>
         )}
         <AdminDashboard logout={handleLogout} />
@@ -242,9 +242,9 @@ function App() {
           />
 
           {isReadOnlyDemo && (
-            <div className="demo-readonly-banner" role="status">
-              Public demo account: read-only. Explore the sample books,
-              royalties, and support ticket; account changes are disabled.
+            <div className="demo-account-banner" role="status">
+              Public demo account: you can explore the seeded books and
+              royalties, and manage your demo support requests.
             </div>
           )}
 

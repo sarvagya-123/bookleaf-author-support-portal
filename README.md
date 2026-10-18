@@ -49,16 +49,17 @@ non-sample production data.
   this value in Vite variables. For an initial admin account, set
   `ADMIN_EMAIL` and `ADMIN_PASSWORD` in the server environment and run
   `node check-user.js` from the `server` directory.
-- Public demo accounts are intentionally read-only:
+- Public demo accounts:
 
   | Portal | Email | Password | Demo access |
   | --- | --- | --- | --- |
-  | Author | `rohit.kapoor@email.com` | `hyvraQ-UaChuV6uul4sajY7a` | View the seeded author's books, royalties, and demo ticket |
-  | Admin | `demo.admin@bookleaf-demo.com` | `XKp25jbvF-auDM1eOngrJ-jC` | View the demo ticket queue and generate AI drafts |
+  | Author | `rohit.kapoor@email.com` | `hyvraQ-UaChuV6uul4sajY7a` | Explore seeded books and royalties; create support tickets and reply |
+  | Admin | `demo.admin@bookleaf-demo.com` | `XKp25jbvF-auDM1eOngrJ-jC` | Manage tickets for the demo author and use AI assistance |
 
-  The demo admin is scoped to the demo author's tickets. Demo accounts cannot
-  create or modify books, tickets, replies, notes, assignments, or statuses.
-  Use a separately registered account to exercise write actions.
+  The demo admin is restricted to the demo author's tickets: it can update
+  their statuses, categories, and priorities; assign them; and send replies or
+  internal notes. It cannot read or modify other authors' tickets. The demo
+  author may manage their own books and tickets.
 
 ## Deployment
 
