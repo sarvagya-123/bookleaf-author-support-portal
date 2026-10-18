@@ -10,9 +10,11 @@
   and category display worked. The narrow browser viewport had no horizontal
   overflow.
 - Admin login and queue worked. Opening a ticket prepared a response draft
-  automatically. The hosted API returned `source: "fallback"` because
-  `OPENROUTER_API_KEY` is not configured in the Vercel Production environment;
-  the UI identified the fallback and populated the reply editor.
+  automatically. After `OPENROUTER_API_KEY` was added to the API project's
+  Vercel Production environment and the API was redeployed, a synthetic hosted
+  check returned `source: "ai"` and a 120-word draft beginning `Dear Author,`.
+  The admin UI continues to identify fallback drafts if the provider is
+  unavailable.
 - Admin status update, assignment, private note, and public reply succeeded.
   The author saw the public reply and could not see the private note.
 - The deployed book-create route returned HTTP 201 and its draft-delete route
@@ -20,14 +22,16 @@
   that had caused the earlier HTTP 500.
 - A synthetic ticket with an explicitly selected `Royalty & Payments` category
   retained that category through the hosted API and displayed it in the author
-  ticket list. Missing-provider fallback supplied the default `Medium` priority.
+  ticket list. The earlier missing-provider test supplied the default
+  `Medium` priority.
 - OpenRouter checks used synthetic tickets only. The selected free Nemotron
   route is listed at zero prompt/completion pricing. Its initial 200-token
   classification cap cut off internal reasoning and sometimes yielded empty
   content; the cap was raised to 400 after a controlled comparison returned
-  valid JSON and the expected royalty category. Draft output began
-  `Dear Author,` and included the royalty timing guidance. Hosted AI-provider
-  behavior remains unverified until the key is configured in Vercel.
+  valid JSON and the expected royalty category. The live production API now
+  classifies the royalty question as `Royalty & Payments` / `Medium` and returns
+  an AI-sourced draft. Its classification rationale was non-empty and matched
+  the synthetic ticket. The temporary admin used for this check was removed.
 - Temporary QA author/admin accounts, two synthetic hosted tickets, their
   messages, and private notes were removed. Supabase aggregate counts returned
   to baseline: 10 authors, 18 books, 3 users, 2 tickets, 5 messages, 1 note.
@@ -54,9 +58,10 @@ author and book records with the assignment values.
   `node --check`; no automated test files are present in the repository.
 - No pre-existing demo credentials were identified. The temporary QA accounts
   were deleted, and no persistent demo users or passwords were published.
-- To finish hosted provider-backed AI acceptance, add `OPENROUTER_API_KEY` to
-  the API's Vercel Production environment and redeploy. The deployed fallback
-  remains available until then. No persistent demo accounts were created.
+- Provider-backed AI acceptance is complete: the Production variable is
+  present, the redeployed API returned an AI-sourced draft and classification,
+  and the temporary test account was removed. No persistent demo accounts were
+  created.
 
 ## Known limitations
 

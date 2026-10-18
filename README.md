@@ -65,9 +65,11 @@ variables. Never put server credentials in a `VITE_` variable or commit `.env`
 files.
 
 The API falls back to deterministic, clearly labeled drafts and classification
-when the OpenRouter key is absent or the provider fails. The production Vercel
-environment did not have `OPENROUTER_API_KEY` at the last check; hosted AI
-therefore uses the fallback until that variable is configured.
+when the OpenRouter key is absent or the provider fails. `OPENROUTER_API_KEY`
+is configured in the API project's Vercel Production environment. After a
+Production redeploy on 18 October 2026, hosted checks confirmed provider-backed
+draft generation and classification. The fallback remains available if the
+provider is unavailable.
 
 ## API overview
 
